@@ -1,4 +1,4 @@
-package com.Scholr.Scholr;
+package com.Scholr.scholr;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
