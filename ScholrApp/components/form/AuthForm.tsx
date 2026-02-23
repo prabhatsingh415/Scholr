@@ -2,9 +2,16 @@ import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import React from "react";
 import { Key, Lock } from "lucide-react-native";
 import { useForm, Controller } from "react-hook-form";
-import { Linking } from "react-native";
 
-const SignupForm = () => {
+import { useRouter } from "expo-router";
+
+interface AuthFormProps {
+  mode: "login" | "signup";
+  onSubmitData: (data: any) => void;
+}
+
+const AuthForm = ({ mode, onSubmitData }: AuthFormProps) => {
+  const router = useRouter();
   const {
     control,
     handleSubmit,
@@ -13,20 +20,7 @@ const SignupForm = () => {
     defaultValues: { collegeId: "", password: "" },
   });
 
-  const onSubmit = (data: {}) => {
-    console.log("Clean Form Data:", data);
-  };
-
-  const handleRedirect = async () => {
-    const url = "https://prabhatsingh-two.vercel.app/";
-    const supported = await Linking.canOpenURL(url);
-
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      console.log("Don't know how to open this URL");
-    }
-  };
+  const isSignup = mode === "signup";
 
   return (
     <View className="w-full space-y-4 gap-6 mb-12 py-4">
@@ -90,46 +84,46 @@ const SignupForm = () => {
 
       <TouchableOpacity
         className="bg-brand p-4 rounded-xl items-center "
-        onPress={handleSubmit(onSubmit)}
+        onPress={handleSubmit(onSubmitData)}
       >
-        <Text className="text-text-primary font-bold text-lg">Sign Up</Text>
+        <Text className="text-text-primary font-bold text-lg">
+          {isSignup ? "Sign Up" : "Sign In"}
+        </Text>
       </TouchableOpacity>
 
-      <View className="mt-auto pt-10 pb-6 items-center">
+      <View className="mt-auto pt-10 pb-6 items-center gap-2">
         <Text className="text-sm text-text-secondary text-center px-4 leading-5 opacity-80">
           By signing up, you agree to our{"\n"}
-          <Text className="text-brand font-medium">
-            Terms of Service
-          </Text> &{" "}
-          <Text className="text-brand font-medium">Privacy Policy</Text>
-        </Text>
-
-        <View className="flex-row items-center justify-center mt-12 mb-2">
-          <View className="h-[1px] w-10 ml-4 bg-border-subtle opacity-50" />
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleRedirect}
-            className="flex-row items-center mx-4"
+          <Text
+            className="text-brand font-medium"
+            onPress={() => router.push("/(legal)/terms")}
           >
-            <Text className="text-text-secondary text-[10px] tracking-[2px] uppercase">
-              Designed & Crafted by
-              <Text className="text-brand font-extrabold tracking-normal">
-                {"  "}
-                PRABHAT SINGH
-              </Text>
-            </Text>
-          </TouchableOpacity>
-
-          <View className="h-[1px] w-10 bg-border-subtle opacity-50" />
-        </View>
-
-        <Text className="text-[9px] text-text-secondary opacity-30 font-mono italic uppercase tracking-tighter">
-          build.v0.1.415.226_stable
+            Terms of Service
+          </Text>
+          {" & "}
+          <Text
+            className="text-brand font-medium"
+            onPress={() => router.push("/(legal)/privacy")}
+          >
+            Privacy Policy
+          </Text>
         </Text>
+
+        <View>
+          <Text className="text-xs text-text-secondary text-center px-4 leading-5 opacity-80 ">
+            {isSignup ? "Already have an account? " : "Don't have an account? "}
+            <Text
+              className="text-brand font-medium"
+              onPress={() => router.push("/(legal)/privacy")}
+            >
+              {" "}
+              {isSignup ? "Sign in" : "Sign up"}
+            </Text>
+          </Text>
+        </View>
       </View>
     </View>
   );
 };
 
-export default SignupForm;
+export default AuthForm;

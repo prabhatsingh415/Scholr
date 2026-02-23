@@ -6,7 +6,7 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 bg-slate-900 items-center justify-center">
+    <View className="flex-1 bg-background-primary items-center justify-center">
       <StatusBar hidden={true} />
       <Text className="text-4xl text-cyan-400 font-bold">Scholr Live! 🎓</Text>
 
