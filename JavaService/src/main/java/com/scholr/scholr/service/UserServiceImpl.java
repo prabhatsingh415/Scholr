@@ -107,6 +107,9 @@ public class UserServiceImpl implements UserService{
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
+        String rtKey = "RT_" + user.getCollegeId();
+        redisTemplate.opsForValue().set(rtKey, refreshToken, Duration.ofDays(45));
+
         return new TokenData(accessToken, refreshToken);
     }
 

@@ -32,7 +32,7 @@ public class CustomUserDetails implements UserDetails {
     @Override
     @NonNull
     public String getUsername() {
-        return user.getEmail();
+        return user.getCollegeId();
     }
 
     @Override

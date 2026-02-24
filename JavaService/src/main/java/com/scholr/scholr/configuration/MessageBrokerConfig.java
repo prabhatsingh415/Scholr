@@ -16,7 +16,9 @@ public class MessageBrokerConfig {
 
     @Bean
     public Queue queue() {
-        return new Queue(QUEUE_NAME, true);
+        return QueueBuilder.durable(QUEUE_NAME)
+                .withArgument("x-message-ttl", 600000) // 10 minutes
+                .build();
     }
 
     @Bean
