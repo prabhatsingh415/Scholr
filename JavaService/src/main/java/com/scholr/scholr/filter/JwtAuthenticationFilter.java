@@ -4,31 +4,31 @@ import com.scholr.scholr.service.JwtService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-
+@Component
+@AllArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
-        this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
-    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getServletPath();
-        if (path.equals("/user/refresh-token")) {
+        if (path.equals("/api/v1/auth/refresh")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String token = authHeader.substring(7);
 
         // Extract username from token
-        final String userName = jwtService.extractUserEmail(token);
+        final String userName = jwtService.extractUserCollegeId(token);
 
         // Check if user is not already authenticated
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -58,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtService.isTokenValid(token, userDetails)) {
 
                 // check if user is verified
-                Boolean isVerified = (Boolean) jwtService.extractAllClaims(token).get("isVerified");
+                Boolean isVerified = (Boolean) jwtService.extractAllClaims(token).get("is_verified");
                 if (isVerified == null || !isVerified) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     response.setContentType("application/json");

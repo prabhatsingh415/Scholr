@@ -2,6 +2,7 @@ package com.scholr.scholr.service;
 import com.scholr.scholr.CustomUserDetails;
 import com.scholr.scholr.entity.User;
 import com.scholr.scholr.repository.UserRepository;
+import lombok.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,8 +19,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+    @NonNull
+    public UserDetails loadUserByUsername(@NonNull String collegeId) throws UsernameNotFoundException {
+        User user = userRepository.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 
         return new CustomUserDetails(user);
