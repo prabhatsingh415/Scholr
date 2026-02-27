@@ -1,23 +1,17 @@
 package com.scholr.scholr.service;
 
-import com.scholr.scholr.dto.AuthRequest;
-import com.scholr.scholr.dto.TokenData;
-import jakarta.validation.Valid;
-import org.springframework.http.ResponseCookie;
+
+import com.scholr.scholr.entity.User;
+
+import java.util.Optional;
 
 public interface UserService {
-    void handleSignUp(@Valid AuthRequest request);
 
-    TokenData verifyOTP(String otp, String collegeId);
+    Optional<User> findByCollegeId(String collegeId);
 
-    ResponseCookie createRefreshCookie(String refreshToken);
-
-    TokenData handleLogin(@Valid AuthRequest authRequest);
-
-    ResponseCookie logoutUser(String collegeId);
-
-    TokenData rotateTokens(String oldRefreshToken);
+    void save(User user);
 }
+
 
 
 
