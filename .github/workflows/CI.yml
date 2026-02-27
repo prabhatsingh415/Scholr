@@ -3,10 +3,10 @@ name: Website Frontend CI
 on:
   push:
     branches:
-      - website
+      - Website
   pull_request:
     branches:
-      - website
+      - Website
 
 jobs:
   lint-and-build:
