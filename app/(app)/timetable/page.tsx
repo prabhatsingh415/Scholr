@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { getClasses, getSubjects, getTeachers } from "@/lib/local-storage"
+// local-storage helpers are loaded dynamically on the client to avoid server-side localStorage access
 import { toast } from "@/hooks/use-toast"
 import { Plus, Clock, Edit, Trash2 } from "lucide-react"
 
@@ -55,14 +55,47 @@ export default function TimetablePage() {
     room: "",
   })
 
-  const classes = getClasses() as ClassType[]
-  const subjects = getSubjects() as SubjectType[]
-  const teachers = getTeachers() as TeacherType[]
+  const [classes, setClasses] = useState<ClassType[]>([])
+  const [subjects, setSubjects] = useState<SubjectType[]>([])
+  const [teachers, setTeachers] = useState<TeacherType[]>([])
+  const [timetable, setTimetable] = useState<TimetableEntry[]>([])
 
-  const [timetable, setTimetable] = useState<TimetableEntry[]>(() => {
-    const stored = localStorage.getItem("timetable")
-    return stored ? JSON.parse(stored) : []
-  })
+  useEffect(() => {
+    let mounted = true
+    // dynamically import the module that accesses localStorage so it only runs on the client
+    import("@/lib/local-storage")
+      .then((mod) => {
+        if (!mounted) return
+        try {
+          setClasses(mod.getClasses() as ClassType[])
+          setSubjects(mod.getSubjects() as SubjectType[])
+          setTeachers(mod.getTeachers() as TeacherType[])
+        } catch (err) {
+          // if the helper throws, fall back to empty arrays
+          console.error("Failed to load classes/subjects/teachers from local-storage", err)
+          setClasses([])
+          setSubjects([])
+          setTeachers([])
+        }
+
+        try {
+          const stored = localStorage.getItem("timetable")
+          if (stored) {
+            setTimetable(JSON.parse(stored))
+          }
+        } catch (err) {
+          console.error("Failed to read timetable from localStorage", err)
+          setTimetable([])
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to dynamically import local-storage helpers", err)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const filteredTimetable = useMemo(() => {
     if (!selectedClass) return []
@@ -403,3 +436,4 @@ export default function TimetablePage() {
     </div>
   )
 }
+
