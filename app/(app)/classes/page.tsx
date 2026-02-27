@@ -21,7 +21,7 @@ export default function ClassesPage() {
   const [open, setOpen] = useState(false)
   const [edit, setEdit] = useState<any | null>(null)
 
-  const filtered = useMemo(() => classes.filter((c) => c.name.toLowerCase().includes(q.toLowerCase())), [classes, q])
+  const filtered = useMemo(() => classes.filter((c: any) => c.name.toLowerCase().includes(q.toLowerCase())), [classes, q])
 
   return (
     <div className="space-y-6">

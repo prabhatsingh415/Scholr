@@ -12,16 +12,31 @@ import { toast } from "@/hooks/use-toast"
 import { Calendar, Users, TrendingUp } from "lucide-react"
 
 export default function AttendancePage() {
-  const classes = db.classes.getAll()
-  const students = db.students.getAll()
-  const attendance = db.attendance.getAll()
+  // Yeh useState lagana zaroori hai taaki infinite loop (Maximum update depth) na aaye
+  const [classes, setClasses] = useState<any[]>([])
+  const [students, setStudents] = useState<any[]>([])
+  const [attendance, setAttendance] = useState<any[]>([])
 
-  const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || "")
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().slice(0, 10))
+  const [selectedClassId, setSelectedClassId] = useState<string>("")
+  const [selectedDate, setSelectedDate] = useState<string>("")
   const [presentMap, setPresentMap] = useState<Record<string, boolean>>({})
   const [isInitialized, setIsInitialized] = useState(false)
 
+  // Sirf page load hone par ek baar data fetch karega
+  useEffect(() => {
+    const loadedClasses = db.classes.getAll()
+    setClasses(loadedClasses)
+    setStudents(db.students.getAll())
+    setAttendance(db.attendance.getAll())
+    setSelectedDate(new Date().toISOString().slice(0, 10))
+    
+    if (loadedClasses.length > 0) {
+      setSelectedClassId(loadedClasses[0].id)
+    }
+  }, [])
+
   const classStudents = useMemo(() => {
+    if (!classes.length || !students.length) return []
     const studentsPerClass = Math.ceil(students.length / classes.length)
     const classIndex = classes.findIndex((c) => c.id === selectedClassId)
     if (classIndex === -1) return []
@@ -41,11 +56,7 @@ export default function AttendancePage() {
     const presentRecords = classAttendance.filter((a) => a.present).length
     const attendanceRate = totalRecords > 0 ? Math.round((presentRecords / totalRecords) * 100) : 0
 
-    return {
-      totalRecords,
-      presentRecords,
-      attendanceRate,
-    }
+    return { totalRecords, presentRecords, attendanceRate }
   }, [attendance, selectedClassId])
 
   useEffect(() => {
@@ -60,7 +71,7 @@ export default function AttendancePage() {
       setPresentMap(Object.fromEntries(classStudents.map((s) => [s.id, true])))
       setIsInitialized(true)
     }
-  }, [existingAttendance, classStudents.length, selectedClassId, selectedDate, isInitialized])
+  }, [existingAttendance, classStudents, isInitialized])
 
   useEffect(() => {
     setIsInitialized(false)
@@ -82,6 +93,8 @@ export default function AttendancePage() {
       })
     })
 
+    setAttendance(db.attendance.getAll()) // Update stats immediately
+
     toast({
       title: "Success",
       description: `Attendance recorded for ${classStudents.length} students`,
@@ -95,6 +108,9 @@ export default function AttendancePage() {
   const markAllAbsent = useCallback(() => {
     setPresentMap(Object.fromEntries(classStudents.map((s) => [s.id, false])))
   }, [classStudents])
+
+  // Jab tak data load na ho jaye, blank return karein taaki error na aaye
+  if (!selectedDate) return null;
 
   return (
     <div className="space-y-6">

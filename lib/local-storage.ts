@@ -28,14 +28,14 @@ export type User = {
 
 // Auth management
 export const auth = {
-  signIn: (email: string, password: string): Promise<{ user: User | null; error: string | null }> => {
+  signIn: (email: string, password: string, role: "admin" | "teacher" | "student"): Promise<{ user: User | null; error: string | null }> => {
     return new Promise((resolve) => {
       // Simple demo auth - in real app would validate against stored users
       if (email && password.length >= 6) {
         const user: User = {
-          id: "1",
+          id: Date.now().toString(),
           email,
-          role: "admin",
+          role: role,
           created_at: new Date().toISOString(),
         }
         localStorage.setItem("auth_user", JSON.stringify(user))
@@ -52,7 +52,7 @@ export const auth = {
         const user: User = {
           id: Date.now().toString(),
           email,
-          role: "admin",
+          role: "student",
           created_at: new Date().toISOString(),
         }
         localStorage.setItem("auth_user", JSON.stringify(user))
@@ -96,6 +96,7 @@ export const auth = {
 export const db = {
   students: {
     getAll: (): Student[] => {
+      if (typeof window === "undefined") return []
       const stored = localStorage.getItem("students")
       return stored ? JSON.parse(stored) : []
     },
@@ -132,6 +133,7 @@ export const db = {
 
   teachers: {
     getAll: (): Teacher[] => {
+      if (typeof window === "undefined") return []
       const stored = localStorage.getItem("teachers")
       return stored ? JSON.parse(stored) : []
     },
@@ -168,6 +170,7 @@ export const db = {
 
   subjects: {
     getAll: () => {
+      if (typeof window === "undefined") return []
       const stored = localStorage.getItem("subjects")
       return stored ? JSON.parse(stored) : []
     },
@@ -204,6 +207,7 @@ export const db = {
 
   classes: {
     getAll: () => {
+      if (typeof window === "undefined") return []
       const stored = localStorage.getItem("classes")
       return stored ? JSON.parse(stored) : []
     },
@@ -240,6 +244,7 @@ export const db = {
 
   attendance: {
     getAll: () => {
+      if (typeof window === "undefined") return []
       const stored = localStorage.getItem("attendance")
       return stored ? JSON.parse(stored) : []
     },
@@ -267,6 +272,7 @@ export const db = {
 
   grades: {
     getAll: () => {
+      if (typeof window === "undefined") return []
       const stored = localStorage.getItem("grades")
       return stored ? JSON.parse(stored) : []
     },
@@ -294,6 +300,7 @@ export const db = {
 
   fees: {
     getAll: () => {
+      if (typeof window === "undefined") return []
       const stored = localStorage.getItem("fees")
       return stored ? JSON.parse(stored) : []
     },
@@ -622,6 +629,8 @@ const SEED_DATA = {
 }
 
 const initializeSeedData = () => {
+  if (typeof window === "undefined") return; // Prevent Server-Side mismatch errors
+  
   // Check if data already exists
   if (!localStorage.getItem("students")) {
     localStorage.setItem("students", JSON.stringify(SEED_DATA.students))
