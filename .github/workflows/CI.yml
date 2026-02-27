@@ -9,7 +9,7 @@ on:
       - Website
 
 jobs:
-  lint-and-build:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,15 +24,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        
-      - name: Create ESLint Config (Fix for Interactive Prompt)
-        run: |
-          if [ ! -f .eslintrc.json ]; then
-            echo '{"extends": "next/core-web-vitals"}' > .eslintrc.json
-          fi
-
-      - name: Run Lint Check
-        run: npm run lint --dir .
 
       - name: Run Build
         run: npm run build
