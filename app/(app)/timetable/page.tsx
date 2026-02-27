@@ -23,6 +23,21 @@ interface TimetableEntry {
   room: string
 }
 
+interface ClassType {
+  id: string
+  name: string
+}
+
+interface SubjectType {
+  id: string
+  name: string
+}
+
+interface TeacherType {
+  id: string
+  full_name: string
+}
+
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 const TIME_SLOTS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]
 
@@ -40,9 +55,9 @@ export default function TimetablePage() {
     room: "",
   })
 
-  const classes = getClasses()
-  const subjects = getSubjects()
-  const teachers = getTeachers()
+  const classes = getClasses() as ClassType[]
+  const subjects = getSubjects() as SubjectType[]
+  const teachers = getTeachers() as TeacherType[]
 
   const [timetable, setTimetable] = useState<TimetableEntry[]>(() => {
     const stored = localStorage.getItem("timetable")
