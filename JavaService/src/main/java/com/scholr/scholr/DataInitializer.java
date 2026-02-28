@@ -16,8 +16,6 @@ import java.time.LocalDate;
 public class DataInitializer {
 
     private final UserRepository userRepository;
-    private final PasswordService passwordService;
-
     @Bean
     CommandLineRunner init() {
         return args -> {

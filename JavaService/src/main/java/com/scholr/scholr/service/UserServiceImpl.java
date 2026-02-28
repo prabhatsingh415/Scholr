@@ -7,6 +7,8 @@ import com.scholr.scholr.entity.User;
 import com.scholr.scholr.enums.Role;
 import com.scholr.scholr.exception.*;
 import com.scholr.scholr.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
@@ -38,6 +40,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
+    @CacheEvict(value = "userProfile", key = "#collegeId")
     public UserDataResponse updateName(UpdateNameRequest request, String collegeId) {
         User user = repository.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UserNotFoundException("User not found!"));
@@ -91,6 +94,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
+    @CacheEvict(value = "userProfile", key = "#collegeId")
     public UserDataResponse updateProfilePic(MultipartFile file, String collegeId) {
         String imageUrl = cloudinaryService.uploadImage(file, "profile_pictures")
                  .orElseThrow(() -> new ImageUploadFailedException("Image upload failed"));
@@ -105,6 +109,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    @CacheEvict(value = "userProfile", key = "#collegeId")
     public void updatePassword(String collegeId, ChangePasswordRequest request) {
         if (!request.newPassword().equals(request.confirmNewPassword())) {
             throw new PasswordMismatchException("New password and confirmation password do not match.");
@@ -128,7 +133,9 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    @Cacheable(value = "userProfile", key = "#collegeId")
     public DashboardDataResponse getUserProfile(String collegeId) {
+        log.info("!!! CACHE MISS: Fetching from DB for collegeId: {} !!!", collegeId);
         User user = repository.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UserNotFoundException("User not found!"));
 
