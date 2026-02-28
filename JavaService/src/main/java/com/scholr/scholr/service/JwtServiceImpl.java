@@ -1,5 +1,7 @@
 package com.scholr.scholr.service;
 
+import com.scholr.scholr.entity.Student;
+import com.scholr.scholr.entity.Teacher;
 import com.scholr.scholr.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -90,6 +92,13 @@ public class JwtServiceImpl implements JwtService {
         claims.put("last_name", user.getLastName());
         claims.put("is_verified", user.isVerified());
 
+        if (user instanceof Teacher teacher) {
+            claims.put("is_hod", teacher.isHod());
+            claims.put("is_class_teacher", teacher.isClassTeacher());
+        } else if (user instanceof Student student) {
+            claims.put("batch_id", student.getBatchId());
+            claims.put("roll_no", student.getRollNo());
+        }
         return claims;
     }
 
