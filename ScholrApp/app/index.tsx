@@ -16,6 +16,27 @@ export default function Index() {
       >
         <Text className="text-white font-bold text-lg">Go to Signup</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        className="bg-indigo-500 p-4 rounded-xl items-center mt-4"
+        onPress={() => router.push("/verify_otp" as any)}
+      >
+        <Text className="text-white font-bold text-lg">Verify Otp</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        className="bg-indigo-500 p-4 rounded-xl items-center mt-4"
+        onPress={() => router.push("/login" as any)}
+      >
+        <Text className="text-white font-bold text-lg">login</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        className="bg-indigo-500 p-4 rounded-xl items-center mt-4"
+        onPress={() => router.push("/(tabs)/home" as any)}
+      >
+        <Text className="text-white font-bold text-lg">Home</Text>
+      </TouchableOpacity>
     </View>
   );
 }

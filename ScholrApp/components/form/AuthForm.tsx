@@ -42,12 +42,11 @@ const AuthForm = ({ mode, onSubmitData }: AuthFormProps) => {
           </View>
         )}
       />
-      {errors.collegeId && typeof errors.collegeId.message === "string" && (
+      {errors.collegeId?.message ? (
         <Text className="text-red-500 mb-2 ml-1 text-xs">
-          {errors.collegeId.message}
+          {String(errors.collegeId.message)}
         </Text>
-      )}
-
+      ) : null}
       <Controller
         control={control}
         name="password"
@@ -58,7 +57,7 @@ const AuthForm = ({ mode, onSubmitData }: AuthFormProps) => {
             value:
               /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$&~!])(?=.*\d)[A-Za-z\d@$&~!]{8,50}$/,
             message:
-              "Password must contain:\n• One uppercase letter\n• One lowercase letter\n• One number\n• One special character",
+              "Password must contain uppercase, lowercase, number and special character",
           },
         }}
         render={({ field: { onChange, value, onBlur } }) => (
@@ -76,11 +75,11 @@ const AuthForm = ({ mode, onSubmitData }: AuthFormProps) => {
           </View>
         )}
       />
-      {errors.password && typeof errors.password.message === "string" && (
+      {errors.password?.message ? (
         <Text className="text-red-500 mb-2 ml-1 text-xs leading-5">
-          {errors.password.message}
+          {String(errors.password.message)}
         </Text>
-      )}
+      ) : null}
 
       <TouchableOpacity
         className="bg-brand p-4 rounded-xl items-center "
@@ -91,36 +90,44 @@ const AuthForm = ({ mode, onSubmitData }: AuthFormProps) => {
         </Text>
       </TouchableOpacity>
 
-      <View className="mt-auto pt-10 pb-6 items-center gap-2">
-        <Text className="text-sm text-text-secondary text-center px-4 leading-5 opacity-80">
-          By signing up, you agree to our{"\n"}
-          <Text
-            className="text-brand font-medium"
-            onPress={() => router.push("/(legal)/terms")}
-          >
-            Terms of Service
-          </Text>
-          {" & "}
-          <Text
-            className="text-brand font-medium"
-            onPress={() => router.push("/(legal)/privacy")}
-          >
-            Privacy Policy
-          </Text>
-        </Text>
-
-        <View>
-          <Text className="text-xs text-text-secondary text-center px-4 leading-5 opacity-80 ">
-            {isSignup ? "Already have an account? " : "Don't have an account? "}
+      {mode === "signup" ? (
+        <View className="mt-auto pt-10 pb-6 items-center gap-2">
+          <Text className="text-sm text-text-secondary text-center px-4 leading-5 opacity-80">
+            By signing up, you agree to our{"\n"}
+            <Text
+              className="text-brand font-medium"
+              onPress={() => router.push("/(legal)/terms")}
+            >
+              Terms of Service
+            </Text>
+            {" & "}
             <Text
               className="text-brand font-medium"
               onPress={() => router.push("/(legal)/privacy")}
             >
-              {" "}
-              {isSignup ? "Sign in" : "Sign up"}
+              Privacy Policy
             </Text>
           </Text>
         </View>
+      ) : (
+        ""
+      )}
+
+      <View className="flex-row justify-center items-center mt-4">
+        <Text className="text-xs text-text-secondary opacity-80">
+          {isSignup ? "Already have an account? " : "Don't have an account? "}
+        </Text>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => {
+            isSignup ? router.replace("/login") : router.replace("/signup");
+          }}
+        >
+          <Text className="text-xs text-brand font-bold">
+            {isSignup ? " Sign in" : " Sign up"}
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
