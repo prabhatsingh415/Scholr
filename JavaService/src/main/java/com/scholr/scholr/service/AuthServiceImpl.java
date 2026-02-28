@@ -1,12 +1,9 @@
 package com.scholr.scholr.service;
 
-import com.scholr.scholr.dto.AuthRequest;
-import com.scholr.scholr.dto.EmailRequest;
-import com.scholr.scholr.dto.ForgotPasswordRequest;
-import com.scholr.scholr.dto.TokenData;
+import com.scholr.scholr.dto.*;
 import com.scholr.scholr.entity.User;
 import com.scholr.scholr.exception.*;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -58,7 +55,8 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
-    public TokenData verifyOTP(String otp, String collegeId) {
+    @Transactional
+    public AuthResponse verifyOTP(String otp, String collegeId) {
         String otpKey = "OTP_" + collegeId; // otp key
         String cachedOtp = (String) redisTemplate.opsForValue().get(otpKey); // fetch otp from redis
 
@@ -74,6 +72,8 @@ public class AuthServiceImpl implements AuthService{
         userService.save(user);
         redisTemplate.delete(otpKey); // delete key
 
+        UserDataResponse userData = userService.mapToDTO(user);
+
         // generate tokens
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -81,7 +81,7 @@ public class AuthServiceImpl implements AuthService{
         String rtKey = "RT_" + collegeId;
         redisTemplate.opsForValue().set(rtKey, refreshToken, Duration.ofDays(45));
 
-        return new TokenData(accessToken, refreshToken);
+        return new AuthResponse(accessToken, refreshToken, userData);
     }
 
     @Override
@@ -97,21 +97,24 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
-    public TokenData handleLogin(AuthRequest authRequest) {
+    public AuthResponse handleLogin(AuthRequest authRequest) {
         User user = userService.findByCollegeId(authRequest.getCollegeId())
                 .orElseThrow(() -> new UserNotFoundException("User not found !"));
 
         boolean passwordValid = passwordService.isPasswordValid(user, authRequest.getPassword());
+
 
         if(!passwordValid) throw new InvalidPasswordException("Invalid password or college id");
 
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
+        UserDataResponse userDataResponse = userService.mapToDTO(user);
+
         String rtKey = "RT_" + user.getCollegeId();
         redisTemplate.opsForValue().set(rtKey, refreshToken, Duration.ofDays(45));
 
-        return new TokenData(accessToken, refreshToken);
+        return new AuthResponse(accessToken, refreshToken, userDataResponse);
     }
 
     @Override
