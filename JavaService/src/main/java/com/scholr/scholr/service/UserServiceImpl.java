@@ -135,7 +135,6 @@ public class UserServiceImpl implements UserService{
     @Override
     @Cacheable(value = "userProfile", key = "#collegeId")
     public DashboardDataResponse getUserProfile(String collegeId) {
-        log.info("!!! CACHE MISS: Fetching from DB for collegeId: {} !!!", collegeId);
         User user = repository.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UserNotFoundException("User not found!"));
 
