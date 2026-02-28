@@ -1,4 +1,4 @@
-package com.scholr.scholr.dto; // Lowercase
+package com.scholr.scholr.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
