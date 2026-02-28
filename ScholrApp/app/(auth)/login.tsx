@@ -14,19 +14,18 @@ import {
 } from "react-native";
 import AuthForm from "../../components/form/AuthForm";
 import { icon } from "../../assets/index";
-import { useSignup } from "@/src/hooks/useSignup";
+import { InfoCard } from "@/components/ui/InfoCard";
 import { ErrorCard } from "../../components/ui/ErrorCard";
-import { InfoCard } from "../../components/ui/InfoCard";
-import { useRouter } from "expo-router";
-import useUserStore from "@/src/store/userStore";
+import { useLogin } from "@/src/hooks/useLogin";
+import useAuthStore from "@/src/store/authStore";
 
-export default function SignupScreen() {
-  const router = useRouter();
+const login = () => {
+  const setTokens = useAuthStore((state: any) => state.setTokens);
   const [errorVisible, setErrorVisible] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [infoVisible, setInfoVisible] = useState<boolean>(false);
 
-  const { mutate, isPending } = useSignup();
-  const setTempCollegeId = useUserStore((state: any) => state.setTempCollegeId);
+  const { mutate, isPending } = useLogin();
 
   const handleRedirect = async () => {
     try {
@@ -36,26 +35,36 @@ export default function SignupScreen() {
     }
   };
 
-  const handleSignup = (formData: any) => {
+  const handleLogin = (formData: any) => {
     mutate(formData, {
-      onSuccess: (data) => {
-        if (data.success) {
-          setTempCollegeId(formData.collegeId);
-          {
-            setTimeout(() => {
-              router.push("/(auth)/verify_otp");
-            }, 1000);
-          }
+      onSuccess: (response) => {
+        if (response.success) {
+          const access = response.data.access_token;
+
+          const rawCookie = response.headers?.["set-cookie"]?.[0];
+          const refresh = rawCookie ? extractTokenFromCookie(rawCookie) : null;
+
+          setTokens({
+            access_token: access,
+            refresh_token: refresh,
+          });
+
+          setInfoVisible(true);
+          setTimeout(() => setInfoVisible(false), 1500);
         }
       },
       onError: (error: any) => {
         const msg =
-          error.response?.data?.message ||
-          "Login Failed: undefined or Network Error";
+          error.response?.data?.message || "Login Failed: Network Error";
         setErrorMessage(msg);
         setErrorVisible(true);
       },
     });
+  };
+
+  //helper
+  const extractTokenFromCookie = (cookieStr: string) => {
+    return cookieStr.split(";")[0].split("=")[1];
   };
 
   if (isPending) {
@@ -70,9 +79,12 @@ export default function SignupScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1, backgroundColor: "#0A0A0A" }}
-      className="mb-8"
     >
       {/* Notifications */}
+      <InfoCard
+        visible={infoVisible}
+        message="OTP successfully sent to your email!"
+      />
       <ErrorCard
         visible={errorVisible}
         message={errorMessage}
@@ -98,7 +110,7 @@ export default function SignupScreen() {
                 <Text className="font-bold text-brand italic">Scholr</Text> App
               </Text>
             </View>
-            <AuthForm mode="signup" onSubmitData={handleSignup} />
+            <AuthForm mode="login" onSubmitData={handleLogin} />
           </View>
         </TouchableWithoutFeedback>
       </ScrollView>
@@ -128,4 +140,6 @@ export default function SignupScreen() {
       </View>
     </KeyboardAvoidingView>
   );
-}
+};
+
+export default login;
