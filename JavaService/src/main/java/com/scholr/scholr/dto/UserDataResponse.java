@@ -15,11 +15,11 @@ public record UserDataResponse(
         String deptId,
         boolean isVerified,
 
-        // Teacher Specific (Optional/Null for others)
+        // Teacher Specific
         Boolean isHod,
         Boolean isClassTeacher,
 
-        // Student Specific (Optional/Null for others)
+        // Student Specific
         String rollNo,
         String batchId,
         String courseName
