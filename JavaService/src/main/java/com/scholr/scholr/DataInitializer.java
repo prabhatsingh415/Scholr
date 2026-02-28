@@ -16,8 +16,6 @@ import java.time.LocalDate;
 public class DataInitializer {
 
     private final UserRepository userRepository;
-    private final PasswordService passwordService;
-
     @Bean
     CommandLineRunner init() {
         return args -> {
@@ -25,8 +23,7 @@ public class DataInitializer {
             Student student = new Student();
 
             student.setCollegeId("ST-2026-01");
-            student.setEmail("prabhat@college.com");
-            student.setPassword(passwordService.hashPassword("Password@123"));
+            student.setEmail("singh.prabhat.work@gmail.com");
             student.setRole(Role.STUDENT);
             student.setBatchId("45578");
             student.setRollNo("458745697");

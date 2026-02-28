@@ -1,23 +1,34 @@
 package com.scholr.scholr.service;
 
-import com.scholr.scholr.dto.AuthRequest;
-import com.scholr.scholr.dto.TokenData;
+
+import com.scholr.scholr.dto.ChangePasswordRequest;
+import com.scholr.scholr.dto.DashboardDataResponse;
+import com.scholr.scholr.dto.UpdateNameRequest;
+import com.scholr.scholr.dto.UserDataResponse;
+import com.scholr.scholr.entity.User;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseCookie;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Optional;
 
 public interface UserService {
-    void handleSignUp(@Valid AuthRequest request);
 
-    TokenData verifyOTP(String otp, String collegeId);
+    Optional<User> findByCollegeId(String collegeId);
 
-    ResponseCookie createRefreshCookie(String refreshToken);
+    void save(User user);
 
-    TokenData handleLogin(@Valid AuthRequest authRequest);
+    UserDataResponse updateName(@Valid UpdateNameRequest request, String collegeId);
 
-    ResponseCookie logoutUser(String collegeId);
+    UserDataResponse mapToDTO(User user);
 
-    TokenData rotateTokens(String oldRefreshToken);
+    UserDataResponse updateProfilePic(MultipartFile file, String collegeId);
+
+    void updatePassword(String collegeId, @Valid ChangePasswordRequest request);
+
+    DashboardDataResponse getUserProfile(String collegeId);
 }
+
+
 
 
 

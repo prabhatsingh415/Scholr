@@ -1,160 +1,187 @@
 package com.scholr.scholr.service;
 
-import com.scholr.scholr.dto.EmailRequest;
-import com.scholr.scholr.dto.AuthRequest;
-import com.scholr.scholr.dto.TokenData;
+import com.scholr.scholr.dto.*;
+import com.scholr.scholr.entity.Student;
+import com.scholr.scholr.entity.Teacher;
 import com.scholr.scholr.entity.User;
+import com.scholr.scholr.enums.Role;
 import com.scholr.scholr.exception.*;
 import com.scholr.scholr.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseCookie;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @Slf4j
 @AllArgsConstructor
 public class UserServiceImpl implements UserService{
-
-    private final UserRepository userRepository;
-    private final MessageBrokerProducer brokerProducer;
-    private final OTPService otpService;
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final JwtService jwtService;
-    private final PasswordService passwordService;
+    private final UserRepository repository;
+    private final CloudinaryService cloudinaryService;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
 
     @Override
-    public void handleSignUp(AuthRequest request) {
-        String collegeId = request.getCollegeId();
+    public Optional<User> findByCollegeId(String collegeId) {
+        return repository.findByCollegeId(collegeId);
+    }
 
-        User user = userRepository.findByCollegeId(collegeId)
-                    .orElseThrow(() -> new UserNotFoundException("Invalid College ID"));
+    @Override
+    public void save(User user) {
+      repository.save(user);
+    }
 
-        if (user.isVerified()) {
-            throw new AlreadyVerifiedException("Account already active. Please login.");
+    @Override
+    @Transactional
+    @CacheEvict(value = "userProfile", key = "#collegeId")
+    public UserDataResponse updateName(UpdateNameRequest request, String collegeId) {
+        User user = repository.findByCollegeId(collegeId)
+                .orElseThrow(() -> new UserNotFoundException("User not found!"));
+
+        boolean isSameName = Objects.equals(user.getFirstName(), request.firstName()) &&
+                Objects.equals(user.getLastName(), request.lastName());
+
+        if (isSameName) {
+            return this.mapToDTO(user);
         }
 
-        String hashedPassword = passwordService.hashPassword(request.getPassword());
-        user.setPassword(hashedPassword);
-        userRepository.save(user);
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
 
+        User updatedUser = repository.save(user);
+
+        return this.mapToDTO(updatedUser);
+    }
+
+    @Override
+    public UserDataResponse mapToDTO(User user) {
+
+        String collegeId = user.getCollegeId();
+        String firstName = user.getFirstName();
+        String lastName = user.getLastName();
         String email = user.getEmail();
-        String OTP = otpService.generateOTP(6);
+        Role role = user.getRole();
 
-        brokerProducer.sendOTPMessage(  // sending email and OTP to msg broker
-                         EmailRequest.builder()
-                        .email(email)
-                        .otp(OTP)
-                        .build()
+        Boolean isHod = null;
+        Boolean isClassTeacher = null;
+        String rollNo = null;
+        String batchId = null;
+        String courseName = null;
+
+        // Type checking aur casting
+        if (user instanceof Teacher teacher) {
+            isHod = teacher.isHod();
+            isClassTeacher = teacher.isClassTeacher();
+        } else if (user instanceof Student student) {
+            rollNo = student.getRollNo();
+            batchId = student.getBatchId();
+            courseName = student.getCourseName();
+        }
+
+        return new UserDataResponse(
+                collegeId, firstName, lastName, email, role,
+                user.getProfilePicURL(), user.getDeptId(), user.isVerified(),
+                isHod, isClassTeacher, rollNo, batchId, courseName
         );
-
-        redisTemplate.opsForValue().set("OTP_"+collegeId, OTP, Duration.ofMinutes(10)); // storing otp in redis
     }
 
     @Override
-    public TokenData verifyOTP(String otp, String collegeId) {
-        String otpKey = "OTP_" + collegeId; // otp key
-        String cachedOtp = (String) redisTemplate.opsForValue().get(otpKey); // fetch otp from redis
+    @Transactional
+    @CacheEvict(value = "userProfile", key = "#collegeId")
+    public UserDataResponse updateProfilePic(MultipartFile file, String collegeId) {
+        String imageUrl = cloudinaryService.uploadImage(file, "profile_pictures")
+                 .orElseThrow(() -> new ImageUploadFailedException("Image upload failed"));
 
-        if (cachedOtp == null || !cachedOtp.equals(otp)) {
-            throw new InvalidOTPException("Invalid OTP or OTP expired");
-        }
-
-        User user = userRepository.findByCollegeId(collegeId)
+        User user = repository.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
+        user.setProfilePicURL(imageUrl);
+        User updatedUser = repository.save(user);
 
-        user.setVerified(true); // set student verify
-        userRepository.save(user);
-        redisTemplate.delete(otpKey); // delete key
-
-        // generate tokens
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-
-        String rtKey = "RT_" + collegeId;
-        redisTemplate.opsForValue().set(rtKey, refreshToken, Duration.ofDays(45));
-
-        return new TokenData(accessToken, refreshToken);
+        return this.mapToDTO(updatedUser);
     }
 
     @Override
-    public ResponseCookie createRefreshCookie(String refreshCookie) {
-        return ResponseCookie.from("refresh_token", refreshCookie)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(45 * 24 * 60 * 60) // 45 days
-                .sameSite("Strict")
-                .build();
-
-    }
-
-    @Override
-    public TokenData handleLogin(AuthRequest authRequest) {
-        User user = userRepository.findByCollegeId(authRequest.getCollegeId())
-                    .orElseThrow(() -> new UserNotFoundException("User not found !"));
-
-        boolean passwordValid = passwordService.isPasswordValid(user, authRequest.getPassword());
-
-        if(!passwordValid) throw new InvalidPasswordException("Invalid password or college id");
-
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-
-        String rtKey = "RT_" + user.getCollegeId();
-        redisTemplate.opsForValue().set(rtKey, refreshToken, Duration.ofDays(45));
-
-        return new TokenData(accessToken, refreshToken);
-    }
-
-    @Override
-    public ResponseCookie logoutUser(String collegeId) {
-        redisTemplate.delete("RT_" + collegeId);
-
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
-                .maxAge(0)
-                .path("/")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .build();
-
-        SecurityContextHolder.clearContext();
-
-        log.info("[User Service:Logout] User {} logged out successfully", collegeId);
-        return cookie;
-    }
-
-    @Override
-    public TokenData rotateTokens(String oldRefreshToken) {
-        String collegeId = jwtService.extractUserCollegeId(oldRefreshToken);
-
-        String rtKey = "RT_" + collegeId;
-        String savedToken = (String) redisTemplate.opsForValue().get(rtKey);
-
-        if (savedToken == null || !savedToken.equals(oldRefreshToken)) {
-            throw new UnauthorizedAccessException("Invalid or expired refresh token");
+    @CacheEvict(value = "userProfile", key = "#collegeId")
+    public void updatePassword(String collegeId, ChangePasswordRequest request) {
+        if (!request.newPassword().equals(request.confirmNewPassword())) {
+            throw new PasswordMismatchException("New password and confirmation password do not match.");
         }
 
-        User user = userRepository.findByCollegeId(collegeId)
+        User user = repository.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
+        if (!bCryptPasswordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new InvalidCurrentPasswordException("Current password is incorrect.");
+        }
 
-        redisTemplate.delete(rtKey);
+        if (bCryptPasswordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new PasswordSameAsOldException("New password cannot be the same as the old one.");
+        }
 
-        String newAccess = jwtService.generateAccessToken(user);
-        String newRefresh = jwtService.generateRefreshToken(user);
+        user.setPassword(bCryptPasswordEncoder.encode(request.newPassword()));
+        repository.save(user);
 
-        redisTemplate.opsForValue().set(rtKey, newRefresh, Duration.ofDays(45));
-
-        return new TokenData(newAccess, newRefresh);
+        log.info("Password updated for user: {}", collegeId);
     }
 
+    @Override
+    @Cacheable(value = "userProfile", key = "#collegeId")
+    public DashboardDataResponse getUserProfile(String collegeId) {
+        User user = repository.findByCollegeId(collegeId)
+                .orElseThrow(() -> new UserNotFoundException("User not found!"));
 
+        return this.mapToDashboardDTO(user) ;
+    }
+
+    private DashboardDataResponse mapToDashboardDTO(User user) {
+        // Common Fields
+        String collegeId = user.getCollegeId();
+        String firstName = user.getFirstName();
+        String lastName = user.getLastName();
+        String email = user.getEmail();
+        String phoneNo = user.getPhoneNo();
+        String profilePicURL = user.getProfilePicURL();
+        String deptId = user.getDeptId();
+        String role = user.getRole().name();
+
+        // Student Specific Fields
+        String rollNo = null;
+        String courseName = null;
+        String batchId = null;
+        Double cgpa = null;
+        Integer activeBacklogs = null;
+
+
+        if (user instanceof Student student) {
+            rollNo = student.getRollNo();
+            courseName = student.getCourseName();
+            batchId = student.getBatchId();
+            cgpa = student.getCgpa();
+            activeBacklogs = student.getActiveBacklogs();
+        }
+
+        return new DashboardDataResponse(
+                collegeId,
+                firstName,
+                lastName,
+                email,
+                phoneNo,
+                profilePicURL,
+                deptId,
+                role,
+                rollNo,
+                courseName,
+                batchId,
+                cgpa,
+                activeBacklogs
+        );
+    }
 }
