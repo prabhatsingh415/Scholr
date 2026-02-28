@@ -34,5 +34,4 @@ public class Student extends User {
     @Column(nullable = false)
     private LocalDate expectedDateOfGraduation;
 
-
 }

@@ -46,9 +46,9 @@ public class AuthController {
     public ResponseEntity<?> confirmSignUp(@Valid @RequestBody VerifyOTPRequest request){
         log.info("[Auth:OTP-Verification] Verification attempt for collegeId: {}", request.collegeId());
 
-        TokenData tokenData = authService.verifyOTP(request.otp(), request.collegeId());
+        AuthResponse authResponse = authService.verifyOTP(request.otp(), request.collegeId());
 
-        ResponseCookie refreshCookie = authService.createRefreshCookie(tokenData.refreshToken());
+        ResponseCookie refreshCookie = authService.createRefreshCookie(authResponse.refreshToken());
 
         return ResponseEntity
                 .ok()
@@ -56,7 +56,8 @@ public class AuthController {
                 .body(new ApiResponse<>(
                         true,
                         "OTP verified successfully",
-                        Map.of("access_token", tokenData.accessToken()),
+                        Map.of("access_token", authResponse.accessToken(),
+                            "user", authResponse.user()),
                         null,
                         LocalDateTime.now().toString()
                 ));
@@ -66,17 +67,18 @@ public class AuthController {
     public ResponseEntity<?> loginUser(@Valid @RequestBody AuthRequest authRequest){
         log.info("[Auth:Login] Login attempt for collegeId {}", authRequest.getCollegeId());
 
-        TokenData tokenData = authService.handleLogin(authRequest);
+        AuthResponse authResponse = authService.handleLogin(authRequest);
 
-        ResponseCookie refreshCookie = authService.createRefreshCookie(tokenData.refreshToken());
+        ResponseCookie refreshCookie = authService.createRefreshCookie(authResponse.refreshToken());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new ApiResponse<>(
-                true,
-                "Login successful",
-                Map.of("access_token", tokenData.accessToken()),
-                null,
+             true,
+            "Login successful",
+                     Map.of("access_token", authResponse.accessToken(),
+                            "user", authResponse.user()),
+           null,
                 LocalDateTime.now().toString()
         ));
     }
@@ -103,6 +105,10 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request){
         log.info("[Auth:refresh] request reached for token rotation");
+
+        if (request.getCookies() == null) {
+            throw new UnauthorizedAccessException("Refresh token missing");
+        }
 
         String oldRefreshToken = Arrays.stream(request.getCookies())
                 .filter(c -> "refresh_token".equals(c.getName()))
