@@ -36,7 +36,7 @@ public class DataInitializer {
 
 
             userRepository.save(student);
-            System.out.println("✅ Testing User Created: ST-2026-01 / Password@123");
+            System.out.println("✅ Testing User Createdy790: ST-2026-01 / Password@123");
         };
     }
 }
