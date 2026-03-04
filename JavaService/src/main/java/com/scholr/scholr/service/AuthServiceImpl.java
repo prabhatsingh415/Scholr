@@ -54,6 +54,7 @@ public class AuthServiceImpl implements AuthService{
         redisTemplate.opsForValue().set("OTP_"+collegeId, OTP, Duration.ofMinutes(10)); // storing otp in redis
     }
 
+
     @Override
     @Transactional
     public AuthResponse verifyOTP(String otp, String collegeId) {
@@ -101,9 +102,11 @@ public class AuthServiceImpl implements AuthService{
         User user = userService.findByCollegeId(authRequest.getCollegeId())
                 .orElseThrow(() -> new UserNotFoundException("User not found !"));
 
+        if(!user.isVerified()){
+            throw new UnauthorizedAccessException("Account not verified. Please verify your OTP first.");
+        }
+
         boolean passwordValid = passwordService.isPasswordValid(user, authRequest.getPassword());
-
-
         if(!passwordValid) throw new InvalidPasswordException("Invalid password or college id");
 
         String accessToken = jwtService.generateAccessToken(user);
@@ -197,5 +200,26 @@ public class AuthServiceImpl implements AuthService{
         user.setPassword(hashedPassword);
         userService.save(user);
         redisTemplate.delete(otpKey); // delete key
+    }
+
+    @Override
+    public void resendOTP(String collegeId) {
+        User user = userService.findByCollegeId(collegeId)
+                .orElseThrow(() -> new UserNotFoundException("Invalid College ID"));
+
+        if (user.isVerified()) {
+            throw new AlreadyVerifiedException("Account already active.");
+        }
+
+        String newOTP = otpService.generateOTP(6);
+
+        brokerProducer.sendOTPMessage(
+                EmailRequest.builder()
+                        .email(user.getEmail())
+                        .otp(newOTP)
+                        .build()
+        );
+
+        redisTemplate.opsForValue().set("OTP_" + collegeId, newOTP, Duration.ofMinutes(10));
     }
 }

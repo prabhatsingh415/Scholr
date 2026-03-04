@@ -5,9 +5,13 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
+        contentStyle: { backgroundColor: "#0A0A0A" },
+        animation: "fade",
       }}
     >
+      <Stack.Screen name="login" />
       <Stack.Screen name="signup" />
+      <Stack.Screen name="verify_otp" />
     </Stack>
   );
 }

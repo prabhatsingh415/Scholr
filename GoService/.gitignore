@@ -1,0 +1,33 @@
+# Environment Variables
+.env
+
+# Binaries and Connectors
+bin/
+out/
+GoService
+*.exe
+*.exe_util
+*.dll
+*.so
+*.dylib
+
+# Test coverage files
+*.out
+*.test
+*.prof
+
+# Dependency directories
+vendor/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log

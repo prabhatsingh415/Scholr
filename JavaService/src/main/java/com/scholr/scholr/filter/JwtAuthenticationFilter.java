@@ -28,6 +28,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getServletPath();
+
+        log.info("PATH: {}", request.getServletPath());
+
         if (path.equals("/api/v1/auth/refresh")) {
             filterChain.doFilter(request, response);
             return;
@@ -35,6 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Extract JWT from "Authorization" header
         final String authHeader = request.getHeader("Authorization");
+
+        log.info("Authorization header: {}", authHeader);
 
         // If header is missing OR does not start with " Bearer ", skip and continue the filter chain
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -45,43 +50,55 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Extract JWT Token
         final String token = authHeader.substring(7);
 
-        // Extract username from token
-        final String userName = jwtService.extractUserCollegeId(token);
+        try {
+            // Extract username from token
+            final String userName = jwtService.extractUserCollegeId(token);
 
-        // Check if user is not already authenticated
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            // Check if user is not already authenticated
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (userName != null && authentication == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
+            if (userName != null && authentication == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
 
-            // Validate token
-            if (jwtService.isTokenValid(token, userDetails)) {
+                // Validate token
+                if (jwtService.isTokenValid(token, userDetails)) {
 
-                // check if user is verified
-                Boolean isVerified = (Boolean) jwtService.extractAllClaims(token).get("is_verified");
-                if (isVerified == null || !isVerified) {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"status\":403 ,\"error\":\"Account not verified\",\"message\":\"Please verify your email.\"}");
-                    return;
+                    // check if user is verified
+                    Boolean isVerified = (Boolean) jwtService.extractAllClaims(token).get("is_verified");
+                    if (isVerified == null || !isVerified) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"status\":403 ,\"error\":\"Account not verified\",\"message\":\"Please verify your email.\"}");
+                        return;
+                    }
+
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    // Attach request details
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // Store authentication in context
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-
-                // Attach request details
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Store authentication in context
-                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-
+            // Continue filter chain
+            filterChain.doFilter(request, response);
+        }catch (io.jsonwebtoken.ExpiredJwtException e) {
+            log.error("JWT Token expired: {}", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\":false, \"message\":\"TOKEN_EXPIRED\"}");
+        } catch (Exception e) {
+            log.error("JWT Authentication failed: {}", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\":false, \"message\":\"Invalid Token\"}");
         }
-        // Continue filter chain
-        filterChain.doFilter(request, response);
     }
 }
