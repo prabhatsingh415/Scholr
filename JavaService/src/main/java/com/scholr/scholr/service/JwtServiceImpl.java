@@ -31,7 +31,8 @@ public class JwtServiceImpl implements JwtService {
     public String generateAccessToken(User user) {
         Map<String, Object> claims = this.generateClaims(user);
 
-        long expirationTime = 30 * 60 * 1000;
+//        long expirationTime = 30 * 60 * 1000;
+        long expirationTime = 2 * 60 * 1000;
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -45,12 +46,13 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateRefreshToken(User user) {
-        long refreshExpiration = 3888000000L;
+//        long refreshExpiration = 3888000000L;
+        long expirationTime = 5 * 60 * 1000;
 
         return Jwts.builder()
                 .setSubject(user.getCollegeId())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(this.getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
