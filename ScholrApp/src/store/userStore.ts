@@ -1,18 +1,8 @@
 import { create } from "zustand";
 import { devtools, persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Role, UserDetails } from "@/types";
-
-interface UserState {
-  user: UserDetails | null;
-  tempCollegeId: string;
-
-  setData: (data: UserDetails) => void;
-  deleteData: () => void;
-  updateData: (data: UserDetails) => void;
-  setTempCollegeId: (id: string) => void;
-  clearTempCollegeId: () => void;
-}
+import { UserDetails } from "@/types/user";
+import { UserState } from "@/types/store";
 
 const userStore = (set: any): UserState => ({
   user: null,

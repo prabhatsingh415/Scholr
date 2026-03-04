@@ -6,7 +6,8 @@ import {
   StateStorage,
 } from "zustand/middleware";
 import * as SecureStore from "expo-secure-store";
-import { AuthDetails } from "@/types";
+import { AuthDetails } from "@/types/auth";
+import { AuthState } from "@/types/store";
 
 const secureStorageWrapper: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
@@ -20,14 +21,10 @@ const secureStorageWrapper: StateStorage = {
   },
 };
 
-interface AuthState {
-  auth: AuthDetails | null;
-  setTokens: (fetchedAuth: AuthDetails) => void;
-  deleteTokens: () => void;
-}
-
 const store = (set: any): AuthState => ({
   auth: null,
+  _hasHydrated: false,
+  setHasHydrated: (state) => set({ _hasHydrated: state }),
   setTokens: (fetchedAuth: AuthDetails): void => {
     set({
       auth: {
@@ -47,6 +44,10 @@ const useAuthStore = create<AuthState>()(
   persist(devtools(store), {
     name: "auth-storage",
     storage: createJSONStorage(() => secureStorageWrapper),
+
+    onRehydrateStorage: () => (state) => {
+      state?.setHasHydrated(true);
+    },
   })
 );
 

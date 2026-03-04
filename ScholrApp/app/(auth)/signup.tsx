@@ -8,63 +8,42 @@ import {
   View,
   Image,
   Text,
-  TouchableOpacity,
-  Linking,
-  ActivityIndicator,
 } from "react-native";
 import AuthForm from "../../components/form/AuthForm";
 import { icon } from "../../assets/index";
-import { useSignup } from "@/src/hooks/useSignup";
+import { useSignup } from "@/src/hooks/auth/useSignup";
 import { ErrorCard } from "../../components/ui/ErrorCard";
-import { InfoCard } from "../../components/ui/InfoCard";
 import { useRouter } from "expo-router";
 import useUserStore from "@/src/store/userStore";
 
+import Footer from "../../components/ui/Footer";
+import Loader from "@/components/ui/Loader";
+
 export default function SignupScreen() {
   const router = useRouter();
-  const [errorVisible, setErrorVisible] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-
   const { mutate, isPending } = useSignup();
   const setTempCollegeId = useUserStore((state: any) => state.setTempCollegeId);
 
-  const handleRedirect = async () => {
-    try {
-      await Linking.openURL("https://prabhatsingh-two.vercel.app/");
-    } catch (err) {
-      console.log("Redirect failed:", err);
-    }
-  };
+  const [errorVisible, setErrorVisible] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const handleSignup = (formData: any) => {
     mutate(formData, {
       onSuccess: (data) => {
         if (data.success) {
           setTempCollegeId(formData.collegeId);
-          {
-            setTimeout(() => {
-              router.push("/(auth)/verify_otp");
-            }, 1000);
-          }
+          router.push("/(auth)/verify_otp");
         }
       },
       onError: (error: any) => {
         const msg =
           error.response?.data?.message ||
-          "Login Failed: undefined or Network Error";
+          "Signup Failed: Something went wrong";
         setErrorMessage(msg);
         setErrorVisible(true);
       },
     });
   };
-
-  if (isPending) {
-    return (
-      <View className="flex-1 justify-center items-center bg-[#0A0A0A]">
-        <ActivityIndicator size="large" color="#00FFAA" />
-      </View>
-    );
-  }
 
   return (
     <KeyboardAvoidingView
@@ -72,6 +51,7 @@ export default function SignupScreen() {
       style={{ flex: 1, backgroundColor: "#0A0A0A" }}
       className="mb-8"
     >
+      {isPending && <Loader children="Sending OTP..." />}
       {/* Notifications */}
       <ErrorCard
         visible={errorVisible}
@@ -104,28 +84,7 @@ export default function SignupScreen() {
       </ScrollView>
 
       {/* Footer */}
-      <View className="flex flex-col items-center justify-center gap-2 mb-8">
-        <View className="flex flex-row justify-center items-center">
-          <View className="h-[1px] w-10 ml-4 bg-border-subtle opacity-50" />
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleRedirect}
-            className="flex-row items-center mx-4"
-          >
-            <Text className="text-text-secondary text-[10px] tracking-[2px] uppercase">
-              Designed & Crafted by{" "}
-              <Text className="text-brand font-extrabold tracking-normal">
-                {" "}
-                PRABHAT SINGH
-              </Text>
-            </Text>
-          </TouchableOpacity>
-          <View className="h-[1px] w-10 bg-border-subtle opacity-50" />
-        </View>
-        <Text className="text-[9px] text-text-secondary opacity-30 font-mono italic uppercase tracking-tighter">
-          build.v0.1.415.226_stable
-        </Text>
-      </View>
+      <Footer />
     </KeyboardAvoidingView>
   );
 }

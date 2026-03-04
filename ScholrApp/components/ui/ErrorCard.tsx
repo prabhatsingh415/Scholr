@@ -1,12 +1,7 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity } from "react-native";
 import { AlertCircle } from "lucide-react-native";
-
-interface ErrorModalProps {
-  visible: boolean;
-  message: string;
-  onClose: () => void;
-}
+import { ErrorModalProps } from "@/types/ui";
 
 export const ErrorCard = ({ visible, message, onClose }: ErrorModalProps) => {
   return (

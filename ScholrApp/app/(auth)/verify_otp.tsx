@@ -1,9 +1,11 @@
 import { ErrorCard } from "@/components/ui/ErrorCard";
+import Footer from "@/components/ui/Footer";
 import { InfoCard } from "@/components/ui/InfoCard";
-import { useVerifyOtp } from "@/src/hooks/useVerifyOtp";
+import Loader from "@/components/ui/Loader";
+import { useResendOtp } from "@/src/hooks/auth/useResendOtp";
+import { useVerifyOtp } from "@/src/hooks/auth/useVerifyOtp";
 import useAuthStore from "@/src/store/authStore";
 import useUserStore from "@/src/store/userStore";
-import { router } from "expo-router";
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -14,23 +16,27 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Linking,
-  ActivityIndicator,
 } from "react-native";
 
 export default function VerifyOTPScreen() {
   const setTokens = useAuthStore((state: any) => state.setTokens);
   const setUser = useUserStore((state: any) => state.setData);
   const collegeId = useUserStore((state: any) => state.tempCollegeId);
+
   const { mutate, isPending } = useVerifyOtp();
+  const { mutate: resendMutate, isPending: isResending } = useResendOtp();
 
   const [errorVisible, setErrorVisible] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [infoVisible, setInfoVisible] = useState<boolean>(false);
   const [infoMessage, setInfoMessage] = useState<string>("");
   const [otp, setOtp] = useState<string>("");
+  const [timer, setTimer] = useState<number>(60);
+  const [canResend, setCanResend] = useState<boolean>(false);
 
+  const intervalRef = useRef<any>(null);
   const inputRef = useRef<TextInput>(null);
+
   const otpLength = 6;
   const otpArray = new Array(otpLength).fill(0);
 
@@ -48,26 +54,22 @@ export default function VerifyOTPScreen() {
     }
   }, [collegeId]);
 
-  const handleRedirect = async () => {
-    try {
-      await Linking.openURL("https://prabhatsingh-two.vercel.app/");
-    } catch (err) {
-      console.log("Redirect failed:", err);
-    }
-  };
-
   const isOtpValid = otp.length === otpLength && /^\d+$/.test(otp);
 
   const handleVerify = () => {
     mutate(
       { otp, collegeId },
       {
-        onSuccess: (data: any) => {
-          if (data.success) {
+        onSuccess: (response: any) => {
+          const backendResponse = response.data;
+          if (backendResponse && backendResponse.success) {
             setInfoVisible(true);
             setInfoMessage("Signup successfull");
-            const access = data.data.access_token;
-            const rawCookie = data.headers?.["set-cookie"]?.[0];
+            const access = backendResponse.data.access_token;
+            const rawCookie =
+              response.headers?.["set-cookie"]?.[0] ||
+              response.headers?.["Set-Cookie"]?.[0];
+
             const refresh = rawCookie
               ? extractTokenFromCookie(rawCookie)
               : null;
@@ -77,7 +79,7 @@ export default function VerifyOTPScreen() {
               refresh_token: refresh,
             });
 
-            setUser(data.data.user);
+            setUser(backendResponse.data.user);
           }
         },
         onError: (error: any) => {
@@ -95,18 +97,43 @@ export default function VerifyOTPScreen() {
     return cookieStr.split(";")[0].split("=")[1];
   };
 
-  if (isPending) {
-    return (
-      <View className="flex-1 justify-center items-center bg-[#0A0A0A]">
-        <ActivityIndicator size="large" color="#00FFAA" />
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (timer > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [timer]);
+
+  const handleResend = () => {
+    if (!canResend) return;
+
+    resendMutate(collegeId, {
+      onSuccess: () => {
+        setInfoMessage("A new OTP has been sent!");
+        setInfoVisible(true);
+        setTimer(60); // Reset timer
+        setCanResend(false);
+      },
+      onError: (error: any) => {
+        setErrorMessage("Failed to resend OTP. Try again later.");
+        setErrorVisible(true);
+      },
+    });
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-[#0A0A0A] mb-8"
     >
+      {(isPending || isResending) && (
+        <Loader>{isPending ? "Verifying OTP..." : "Resending OTP..."}</Loader>
+      )}
       <InfoCard visible={infoVisible} message={infoMessage} />
       <ErrorCard
         visible={errorVisible}
@@ -179,39 +206,31 @@ export default function VerifyOTPScreen() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity className="mt-6 items-center">
+        <TouchableOpacity
+          disabled={!canResend || isResending}
+          onPress={handleResend}
+          className="mt-6 items-center"
+        >
           <Text className="text-gray-500 text-xs">
-            Didn't receive code?{" "}
-            <Text className="text-brand font-bold">Resend OTP</Text>
+            {canResend ? (
+              <>
+                Didn't receive code?{" "}
+                <Text className="text-brand font-bold uppercase tracking-tighter">
+                  Resend OTP
+                </Text>
+              </>
+            ) : (
+              <>
+                Resend OTP available in{" "}
+                <Text className="text-brand font-mono font-bold">{timer}s</Text>
+              </>
+            )}
           </Text>
         </TouchableOpacity>
       </Pressable>
 
-      <View className="flex flex-col items-center justify-center gap-2 mb-8">
-        <View className="flex flex-row justify-center items-center">
-          <View className="h-[1px] w-10 ml-4 bg-border-subtle opacity-50" />
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleRedirect}
-            className="flex-row items-center mx-4"
-          >
-            <Text className="text-text-secondary text-[10px] tracking-[2px] uppercase">
-              Designed & Crafted by
-              <Text className="text-brand font-extrabold tracking-normal">
-                {"  "}
-                PRABHAT SINGH
-              </Text>
-            </Text>
-          </TouchableOpacity>
-
-          <View className="h-[1px] w-10 bg-border-subtle opacity-50" />
-        </View>
-
-        <Text className="text-[9px] text-text-secondary opacity-30 font-mono italic uppercase tracking-tighter ">
-          build.v0.1.415.226_stable
-        </Text>
-      </View>
+      {/* Footer */}
+      <Footer />
     </KeyboardAvoidingView>
   );
 }
