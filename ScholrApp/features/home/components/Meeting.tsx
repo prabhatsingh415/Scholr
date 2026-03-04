@@ -3,8 +3,8 @@ import { CalendarDays } from "lucide-react-native";
 import React from "react";
 import { Role } from "@/types";
 
-const Meeting = ({ role }: { role: Role }) => {
-  const isTeacher = role === "teacher";
+const Meeting = ({ role, showInfo }: { role: Role; showInfo: () => void }) => {
+  const isTeacher = role === "TEACHER";
 
   const liveClass = {
     is_active: true,
@@ -37,7 +37,7 @@ const Meeting = ({ role }: { role: Role }) => {
         </View>
 
         <TouchableOpacity
-          onPress={() => Linking.openURL(liveClass.meeting_link)}
+          onPress={showInfo}
           activeOpacity={0.7}
           className="bg-live-btn p-3 rounded-xl shadow-sm shadow-brand/20"
         >

@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Bell, CalendarClock, ChevronRight } from "lucide-react-native";
 
-const UpcomingAndNotices = () => {
+const UpcomingAndNotices = ({ showInfo }: { showInfo: () => void }) => {
   const upcoming = [
     { id: 1, subject: "Database Systems", time: "Tomorrow, 09:00 AM" },
     { id: 2, subject: "Theory of Computation", time: "28 Feb, 11:30 AM" },
@@ -23,7 +23,7 @@ const UpcomingAndNotices = () => {
         <Text className="text-text-primary text-2xl font-semibold">
           Upcoming
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={showInfo}>
           <Text className="text-brand font-medium">See All</Text>
         </TouchableOpacity>
       </View>
@@ -53,6 +53,7 @@ const UpcomingAndNotices = () => {
       <View className="bg-background-secondary rounded-3xl p-2 border border-background-elevated">
         {notices.map((notice, index) => (
           <TouchableOpacity
+            onPress={showInfo}
             key={notice.id}
             className={`p-4 flex-row items-center ${index !== notices.length - 1 ? "border-b border-background-elevated" : ""}`}
           >

@@ -4,11 +4,7 @@ import { Key, Lock } from "lucide-react-native";
 import { useForm, Controller } from "react-hook-form";
 
 import { useRouter } from "expo-router";
-
-interface AuthFormProps {
-  mode: "login" | "signup";
-  onSubmitData: (data: any) => void;
-}
+import { AuthFormProps } from "@/types";
 
 const AuthForm = ({ mode, onSubmitData }: AuthFormProps) => {
   const router = useRouter();
@@ -75,10 +71,24 @@ const AuthForm = ({ mode, onSubmitData }: AuthFormProps) => {
           </View>
         )}
       />
+
       {errors.password?.message ? (
         <Text className="text-red-500 mb-2 ml-1 text-xs leading-5">
           {String(errors.password.message)}
         </Text>
+      ) : null}
+
+      {!isSignup ? (
+        <View className="mb-2 px-2 items-end">
+          <Text className="text-[10px] text-gray-500 text-right leading-tight italic">
+            Forgot Password?
+            <Text className="text-brand font-semibold">
+              {" "}
+              Contact Faculty or Admin{" "}
+            </Text>
+            to reset.
+          </Text>
+        </View>
       ) : null}
 
       <TouchableOpacity

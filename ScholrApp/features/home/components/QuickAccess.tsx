@@ -65,8 +65,14 @@ const studentActions = [
   },
 ];
 
-const QuickAccess = ({ role }: { role: Role }) => {
-  const actions = role === "teacher" ? teacherActions : studentActions;
+const QuickAccess = ({
+  role,
+  showInfo,
+}: {
+  role: Role;
+  showInfo: () => void;
+}) => {
+  const actions = role === "TEACHER" ? teacherActions : studentActions;
 
   return (
     <View className="px-4 w-full mt-6">
@@ -80,7 +86,7 @@ const QuickAccess = ({ role }: { role: Role }) => {
             key={action.id}
             activeOpacity={0.7}
             className="w-[48%] bg-background-secondary p-6 rounded-3xl mb-4 items-center justify-center border border-background-elevated"
-            onPress={() => console.log(`${action.title} pressed`)}
+            onPress={showInfo}
           >
             <View
               style={{ backgroundColor: action.bg }}

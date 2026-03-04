@@ -1,11 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { CheckCircle2 } from "lucide-react-native";
-
-interface InfoToastProps {
-  message: string;
-  visible: boolean;
-}
+import { InfoToastProps } from "@/types/ui";
 
 export const InfoCard = ({ message, visible }: InfoToastProps) => {
   if (!visible) return null;

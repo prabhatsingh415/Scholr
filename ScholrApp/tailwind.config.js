@@ -17,6 +17,7 @@ module.exports = {
           primary: "#0A0A0A",
           secondary: "#1A1A1A",
           elevated: "#222222",
+          box: "#1A1A1A",
         },
         border: {
           subtle: "#2A2A2A",
