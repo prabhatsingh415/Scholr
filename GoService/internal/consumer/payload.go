@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"goservice/internal/config"
 	"goservice/internal/email"
@@ -33,6 +34,10 @@ func ConsumeMsg(ctx context.Context) {
 	}
 	defer ch.Close()
 
+	args := amqp091.Table{
+		"x-message-ttl": int32(600000), // 10 minutes TTL
+	}
+
 	// Queue
 	q, err := ch.QueueDeclare(
 		"scholr.auth.sync.queue", // name
@@ -40,7 +45,7 @@ func ConsumeMsg(ctx context.Context) {
 		false,                    // delete when unused
 		false,                    // exclusive
 		false,                    // no-wait
-		nil,                      // arguments
+		args,                     // arguments
 	)
 	if err != nil {
 		log.Fatalf("[PAYLOAD :] Failed to declare queue: %v", err)
@@ -99,6 +104,7 @@ func ConsumeMsg(ctx context.Context) {
 				err := email.SendEmail(data.Email, data.OTP, models.Verification)
 				if err != nil {
 					log.Printf("[PAYLOAD :] Failed to send email to %s: %v", data.Email, err)
+					time.Sleep(2 * time.Second)
 					msg.Nack(false, true) //reinsert if fails
 					return
 				}
