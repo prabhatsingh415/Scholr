@@ -42,7 +42,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/forgot-password",
-                                "/api/v1/auth/forgot-password-verify"
+                                "/api/v1/auth/forgot-password-verify",
+                                "/api/v1/auth/resend-otp"
 
                         ).permitAll()
                          .anyRequest()

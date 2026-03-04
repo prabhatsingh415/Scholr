@@ -42,6 +42,21 @@ public class AuthController {
         ));
     }
 
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOTP(@RequestParam String collegeId) {
+        log.info("[Auth:Resend-OTP] Resend attempt for collegeId: {}", collegeId);
+
+        authService.resendOTP(collegeId);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "A new OTP has been sent to your registered Email",
+                null,
+                null,
+                LocalDateTime.now().toString()
+        ));
+    }
+
     @PostMapping("/verify-otp")
     public ResponseEntity<?> confirmSignUp(@Valid @RequestBody VerifyOTPRequest request){
         log.info("[Auth:OTP-Verification] Verification attempt for collegeId: {}", request.collegeId());
@@ -107,6 +122,7 @@ public class AuthController {
         log.info("[Auth:refresh] request reached for token rotation");
 
         if (request.getCookies() == null) {
+            log.error("yaha par hooon nahi mila");
             throw new UnauthorizedAccessException("Refresh token missing");
         }
 
@@ -116,6 +132,7 @@ public class AuthController {
                 .findFirst()
                 .orElseThrow(() -> new UnauthorizedAccessException("Refresh token missing"));
 
+         log.info("old token {}", oldRefreshToken);
         TokenData newTokenData = authService.rotateTokens(oldRefreshToken);
 
         ResponseCookie newCookie = authService.createRefreshCookie(newTokenData.refreshToken());

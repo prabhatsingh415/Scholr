@@ -23,4 +23,6 @@ public interface AuthService {
     void handleForgotPassword(@Valid ForgotPasswordRequest request);
 
     void verifyForgotPasswordOTP(String otp, String collegeId, String password);
+
+    void resendOTP(String collegeId);
 }
