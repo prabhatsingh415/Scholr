@@ -31,6 +31,7 @@ import GradesPage from "./pages/cms/GradesPage";
 import TimetablePage from "./pages/cms/TimetablePage";
 import FeesPage from "./pages/cms/FeesPage";
 import SettingsPage from "./pages/cms/SettingsPage";
+import ApiTestPage from "./pages/ApiTestPage";
 const queryClient = new QueryClient();
 const RoleProtectedRoute = ({ allowedRoles, children }: {
     allowedRoles: Array<"admin" | "teacher" | "student">;
@@ -51,6 +52,7 @@ const App = () => (<QueryClientProvider client={queryClient}>
         <Routes>
           <Route path="/" element={<Index />}/>
           <Route path="/login" element={<LoginPage />}/>
+          <Route path="/api-test" element={<ApiTestPage />}/>
           <Route element={<CmsLayout />}>
             <Route path="/dashboard" element={<DashboardPage />}/>
             <Route path="/notices" element={<RoleProtectedRoute allowedRoles={["admin"]}>
