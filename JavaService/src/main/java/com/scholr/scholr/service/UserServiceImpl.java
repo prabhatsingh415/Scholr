@@ -70,7 +70,6 @@ public class UserServiceImpl implements UserService{
         Role role = user.getRole();
 
         Boolean isHod = null;
-        Boolean isClassTeacher = null;
         String rollNo = null;
         String batchId = null;
         String courseName = null;
@@ -78,17 +77,16 @@ public class UserServiceImpl implements UserService{
         // Type checking aur casting
         if (user instanceof Teacher teacher) {
             isHod = teacher.isHod();
-            isClassTeacher = teacher.isClassTeacher();
         } else if (user instanceof Student student) {
             rollNo = student.getRollNo();
-            batchId = student.getBatchId();
+            batchId = String.valueOf(student.getBatch().getBatchId());
             courseName = student.getCourseName();
         }
 
         return new UserDataResponse(
                 collegeId, firstName, lastName, email, role,
                 user.getProfilePicURL(), user.getDeptId(), user.isVerified(),
-                isHod, isClassTeacher, rollNo, batchId, courseName
+                isHod, rollNo, batchId, courseName
         );
     }
 
@@ -163,7 +161,7 @@ public class UserServiceImpl implements UserService{
         if (user instanceof Student student) {
             rollNo = student.getRollNo();
             courseName = student.getCourseName();
-            batchId = student.getBatchId();
+            batchId = String.valueOf(student.getBatch().getBatchId());
             cgpa = student.getCgpa();
             activeBacklogs = student.getActiveBacklogs();
         }

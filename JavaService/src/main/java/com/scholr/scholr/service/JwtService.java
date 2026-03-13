@@ -1,5 +1,6 @@
 package com.scholr.scholr.service;
 
+import com.scholr.scholr.entity.Subject;
 import com.scholr.scholr.entity.User;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,9 +14,11 @@ public interface JwtService {
 
     boolean isTokenValid(String token, UserDetails userDetails);
 
-    Claims extractAllClaims(String token);
+    Claims extractAllClaims(String token, String secretKey);
 
+    String generateTokenWithCustomData(String collegeId, Long sessionId, Long batchId, Subject targetSubject, Double latitude, Double longitude);
 }
+
 
 
 

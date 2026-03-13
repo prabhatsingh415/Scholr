@@ -24,19 +24,26 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, errorMessage, "VAL_001");
     }
 
+
     @ExceptionHandler({InvalidPasswordException.class, UnauthorizedAccessException.class})
     public ResponseEntity<ApiResponse<Object>> handleUnauthorized(Exception ex) {
         logErrorLocation(ex);
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), "AUTH_002");
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
+    @ExceptionHandler({StudentCanNotHaveSubjectsException.class})
+    public ResponseEntity<ApiResponse<Object>> handleBadRequest(Exception ex) {
+        logErrorLocation(ex);
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "AUTH_003");
+    }
+
+    @ExceptionHandler({UserNotFoundException.class, SubjectNotFoundException.class, BatchNotFoundException.class})
     public ResponseEntity<ApiResponse<Object>> handleNotFound(Exception ex) {
         logErrorLocation(ex);
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), "AUTH_001");
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler({Exception.class, QRCodeToImageConverationFailedException.class, QRGenerationFailedException.class})
     public ResponseEntity<ApiResponse<Object>> handleAllOtherExceptions(Exception ex) {
         logErrorLocation(ex);
         return buildResponse(
