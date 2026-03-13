@@ -10,12 +10,13 @@ import Loader from "@/components/ui/Loader";
 const queryClient = new QueryClient();
 
 export default function AuthLayout() {
-  const { auth, _hasHydrated } = useAuthStore();
+  const { auth, _hasHydrated, deleteTokens } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
   const [isReady, setIsReady] = useState<boolean>(false);
 
   useEffect(() => {
+    // deleteTokens();
     setIsReady(true);
   }, []);
 
