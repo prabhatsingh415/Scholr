@@ -1,6 +1,7 @@
 package com.scholr.scholr.service;
 
 import com.scholr.scholr.entity.Student;
+import com.scholr.scholr.entity.Subject;
 import com.scholr.scholr.entity.Teacher;
 import com.scholr.scholr.entity.User;
 import io.jsonwebtoken.Claims;
@@ -26,34 +27,35 @@ public class JwtServiceImpl implements JwtService {
     @Value("${JWT_SECRET}")
     private String secretKey;
 
+    @Value("${QR_SECRET}")
+    private String qrSecret;
+
 
     @Override
     public String generateAccessToken(User user) {
         Map<String, Object> claims = this.generateClaims(user);
 
-//        long expirationTime = 30 * 60 * 1000;
-        long expirationTime = 2 * 60 * 1000;
+        long expirationTime = 30 * 60 * 1000;
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getCollegeId())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(this.getSecretKey(), SignatureAlgorithm.HS256)
+                .signWith(this.getSecretKey(secretKey), SignatureAlgorithm.HS256)
                 .compact();
     }
 
 
     @Override
     public String generateRefreshToken(User user) {
-//        long refreshExpiration = 3888000000L;
-        long expirationTime = 5 * 60 * 1000;
+        long refreshExpiration = 3888000000L;
 
         return Jwts.builder()
                 .setSubject(user.getCollegeId())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(this.getSecretKey(), SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
+                .signWith(this.getSecretKey(secretKey), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -70,16 +72,38 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token, String secretKey) {
         return Jwts.parserBuilder()
-                .setSigningKey(this.getSecretKey())
+                .setSigningKey(this.getSecretKey(secretKey))
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
 
+    @Override
+    public String generateTokenWithCustomData(String collegeId, Long sessionId, Long batchId, Subject targetSubject, Double latitude, Double longitude) {
 
-    private SecretKey getSecretKey() {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("college_id", collegeId);
+        claims.put("sid", sessionId);
+        claims.put("bid", batchId);
+        claims.put("sub", targetSubject.getSubjectName());
+        claims.put("lat", latitude);
+        claims.put("lng", longitude);
+
+        long expirationTime = 30 * 60 * 1000;
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(collegeId)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(this.getSecretKey(qrSecret), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+
+    private SecretKey getSecretKey(String secretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -96,16 +120,15 @@ public class JwtServiceImpl implements JwtService {
 
         if (user instanceof Teacher teacher) {
             claims.put("is_hod", teacher.isHod());
-            claims.put("is_class_teacher", teacher.isClassTeacher());
         } else if (user instanceof Student student) {
-            claims.put("batch_id", student.getBatchId());
+            claims.put("batch_id", student.getBatch().getBatchId());
             claims.put("roll_no", student.getRollNo());
         }
         return claims;
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
+        final Claims claims = extractAllClaims(token, secretKey);
         return claimsResolver.apply(claims);
     }
 

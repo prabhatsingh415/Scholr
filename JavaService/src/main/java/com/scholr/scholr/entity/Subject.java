@@ -24,6 +24,6 @@ public class Subject {
 
     @ManyToOne
     @JoinColumn(name = "teacher_id")
-    private User teacher;
+    private Teacher teacher;
 
 }

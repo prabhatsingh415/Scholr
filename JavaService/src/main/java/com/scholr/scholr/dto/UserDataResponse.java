@@ -17,7 +17,6 @@ public record UserDataResponse(
 
         // Teacher Specific
         Boolean isHod,
-        Boolean isClassTeacher,
 
         // Student Specific
         String rollNo,
