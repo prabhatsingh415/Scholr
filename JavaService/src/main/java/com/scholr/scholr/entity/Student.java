@@ -22,8 +22,8 @@ public class Student extends User {
     @Column(nullable = false)
     private String courseName;
 
-    @Column(nullable = false)
-    private String batchId;
+    @ManyToOne
+    private Batch batch;
 
     private double cgpa = 0.0;
     private Integer activeBacklogs = 0;

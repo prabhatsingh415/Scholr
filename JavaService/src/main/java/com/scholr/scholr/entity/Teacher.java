@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.util.List;
+
 @Entity
 @Table(name = "teacher_details")
 @PrimaryKeyJoinColumn(name = "user_id") // Link to User's ID
@@ -13,8 +15,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class Teacher extends User {
     private boolean isHod;
-    private boolean isClassTeacher; // only class teacher can mark attendance
 
-//    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
-//    private List<Subject> subjects;
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
+    private List<Subject> subjects;
 }
