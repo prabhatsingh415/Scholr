@@ -66,7 +66,7 @@ public class DataInitializer {
             student.setFirstName("Prabhat");
             student.setLastName("Singh");
             student.setRole(Role.STUDENT);
-
+            student.setBatch(batch2026);
             student.setCourseName("B.TECH");
             student.setRollNo("ROLL-123");
             student.setDateOfJoining(LocalDate.now());
@@ -74,7 +74,7 @@ public class DataInitializer {
             student.setCgpa(0.0);
             student.setVerified(true);
 
-            student.setPassword("Password@123");
+            student.setPassword(bCryptPasswordEncoder.encode("Password@123"));
 
             userRepository.save(student);
 

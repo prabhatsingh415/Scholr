@@ -20,37 +20,71 @@ public class GlobalExceptionHandler {
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-
         return buildResponse(HttpStatus.BAD_REQUEST, errorMessage, "VAL_001");
     }
 
-
-    @ExceptionHandler({InvalidPasswordException.class, UnauthorizedAccessException.class})
+    // --- 401 Unauthorized ---
+    @ExceptionHandler({
+            InvalidPasswordException.class,
+            UnauthorizedAccessException.class,
+            InvalidCurrentPasswordException.class,
+            PasswordMismatchException.class
+    })
     public ResponseEntity<ApiResponse<Object>> handleUnauthorized(Exception ex) {
         logErrorLocation(ex);
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), "AUTH_002");
     }
 
-    @ExceptionHandler({StudentCanNotHaveSubjectsException.class})
-    public ResponseEntity<ApiResponse<Object>> handleBadRequest(Exception ex) {
-        logErrorLocation(ex);
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "AUTH_003");
-    }
-
-    @ExceptionHandler({UserNotFoundException.class, SubjectNotFoundException.class, BatchNotFoundException.class})
+    // --- 404 Not Found ---
+    @ExceptionHandler({
+            UserNotFoundException.class,
+            SubjectNotFoundException.class,
+            BatchNotFoundException.class,
+            SessionNotFoundException.class
+    })
     public ResponseEntity<ApiResponse<Object>> handleNotFound(Exception ex) {
         logErrorLocation(ex);
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), "AUTH_001");
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), "NOT_FOUND_001");
     }
 
-    @ExceptionHandler({Exception.class, QRCodeToImageConverationFailedException.class, QRGenerationFailedException.class})
+    // --- 400 Bad Request (Attendance & Logic Errors) ---
+    @ExceptionHandler({
+            StudentCanNotHaveSubjectsException.class,
+            BatchMismatchException.class,
+            OutOfRangeException.class,
+            AlreadyMarkedException.class,
+            SessionClosedException.class,
+            TokenExpiredException.class,
+            ActiveSessionException.class,
+            AlreadyVerifiedException.class,
+            InvalidOTPException.class,
+            PasswordSameAsOldException.class
+    })
+    public ResponseEntity<ApiResponse<Object>> handleBadRequest(Exception ex) {
+        logErrorLocation(ex);
+
+        // Custom error codes for frontend logic
+        String errorCode = "BAD_REQ_001";
+        if (ex instanceof OutOfRangeException) errorCode = "ATT_001";
+        if (ex instanceof AlreadyMarkedException) errorCode = "ATT_002";
+        if (ex instanceof TokenExpiredException) errorCode = "ATT_003";
+
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), errorCode);
+    }
+
+    // --- 500 Internal Server Error ---
+    @ExceptionHandler({
+            Exception.class,
+            QRCodeToImageConverationFailedException.class,
+            QRGenerationFailedException.class,
+            ImageUploadFailedException.class
+    })
     public ResponseEntity<ApiResponse<Object>> handleAllOtherExceptions(Exception ex) {
         logErrorLocation(ex);
-        return buildResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Something went wrong, please try again later",
-                "ERR_500"
-        );
+        String message = (ex instanceof ImageUploadFailedException || ex instanceof QRGenerationFailedException)
+                ? ex.getMessage() : "Something went wrong, please try again later";
+
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, message, "ERR_500");
     }
 
     private void logErrorLocation(Exception ex) {
@@ -62,8 +96,6 @@ public class GlobalExceptionHandler {
                     element.getMethodName(),
                     element.getLineNumber(),
                     ex.getMessage());
-        } else {
-            log.error("[Error] -> {}", ex.getMessage());
         }
     }
 

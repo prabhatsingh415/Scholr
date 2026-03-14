@@ -42,20 +42,4 @@ public class TeacherController {
     }
 
 
-    @PostMapping("/generate")
-    public ResponseEntity<ApiResponse<String>>
-     getSubjects(@Valid @RequestBody StartAttendanceRequest attendanceRequest,
-                 @AuthenticationPrincipal UserDetails userDetails){
-
-        String qrData = qrService.verifyAndGenerateQR(attendanceRequest, userDetails.getUsername());
-
-        return ResponseEntity.ok(new ApiResponse<>(
-                true,
-                "Attendance QR generated Successfully!",
-                qrData,
-                null,
-                LocalDateTime.now().toString()
-        ));
-    }
-
 }
