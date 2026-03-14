@@ -4,6 +4,6 @@ import com.scholr.scholr.dto.StartAttendanceRequest;
 import jakarta.validation.Valid;
 
 public interface QRService {
-    String verifyAndGenerateQR(@Valid StartAttendanceRequest attendanceRequest, String collegeId);
+    String generateQR(String token);
 }
 

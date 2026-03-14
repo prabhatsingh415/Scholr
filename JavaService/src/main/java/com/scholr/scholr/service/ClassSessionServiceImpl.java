@@ -5,6 +5,8 @@ import com.scholr.scholr.repository.ClassSessionRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @AllArgsConstructor
 public class ClassSessionServiceImpl implements ClassSessionService{
@@ -14,5 +16,15 @@ public class ClassSessionServiceImpl implements ClassSessionService{
     @Override
     public ClassSession save(ClassSession session) {
         return repository.save(session);
+    }
+
+    @Override
+    public Optional<ClassSession> findById(Long sessionId) {
+        return repository.findById(sessionId);
+    }
+
+    @Override
+    public Optional<ClassSession> findActiveSessionByTeacher(Long userId) {
+        return repository.findByTeacherUserIdAndIsCompletedFalse(userId);
     }
 }
