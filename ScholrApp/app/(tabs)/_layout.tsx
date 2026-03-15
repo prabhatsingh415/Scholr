@@ -1,8 +1,12 @@
+import useUserStore from "@/src/store/userStore";
+import { Role } from "@/types/user";
 import { Tabs } from "expo-router";
-import { CircleUserRound, House } from "lucide-react-native";
+import { CircleUserRound, House, ScanQrCode, Users } from "lucide-react-native";
 import { Platform } from "react-native";
 
 export default function TabLayout() {
+  const user = useUserStore((state) => state.user);
+
   return (
     <Tabs
       screenOptions={{
@@ -27,6 +31,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <House color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="attendance"
+        options={{
+          title: "Attendance",
+          tabBarIcon: ({ color }) =>
+            user?.role === Role.STUDENT ? (
+              <ScanQrCode color={color} />
+            ) : (
+              <Users color={color} />
+            ),
+        }}
+      />
+
       <Tabs.Screen
         name="profile"
         options={{
