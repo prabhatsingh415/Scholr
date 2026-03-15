@@ -35,6 +35,8 @@ export default function AuthLayout() {
     // Route Protection
     if (!auth?.access_token && !inAuthGroup) {
       router.replace("/(auth)/login");
+
+      router.replace("/(tabs)/home");
     } else if (auth?.access_token) {
       if (inAuthGroup || isAtRoot) {
         router.replace("/(tabs)/home");
