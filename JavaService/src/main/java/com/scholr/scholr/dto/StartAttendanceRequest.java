@@ -2,7 +2,7 @@ package com.scholr.scholr.dto;
 
 public record StartAttendanceRequest(
         String subjectName,
-        Long batchId,
+        Integer semester,
         String topic,
         Double teacherLat,
         Double teacherLng

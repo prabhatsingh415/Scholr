@@ -1,5 +1,6 @@
 package com.scholr.scholr.service;
 
+import com.scholr.scholr.dto.QRResponse;
 import com.scholr.scholr.dto.StartAttendanceRequest;
 import com.scholr.scholr.dto.StudentAttendanceRequest;
 import com.scholr.scholr.entity.*;
@@ -28,12 +29,13 @@ public class AttendanceServiceImpl implements AttendanceService{
     private final JwtService jwtService;
     private final QRService qrService;
     private final AttendanceRepository repository;
+    private final SemesterService semesterService;
 
     @Value("${QR_SECRET}")
     private String qrSecret;
 
     @Override
-    public String verifyAndGenerateQR(StartAttendanceRequest attendanceRequest, String collegeId) {
+    public QRResponse verifyAndGenerateQR(StartAttendanceRequest attendanceRequest, String collegeId) {
         User user = userService.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UserNotFoundException("CollegeId not found!"));
 
@@ -50,13 +52,12 @@ public class AttendanceServiceImpl implements AttendanceService{
                 .findFirst()
                 .orElseThrow(() -> new SubjectNotFoundException("Subject not assigned to you"));
 
-        Batch batch = batchService.findById(attendanceRequest.batchId())
-                .orElseThrow(() -> new BatchNotFoundException("Batch not found"));
+        Semester semester = semesterService.findBySemesterNo(attendanceRequest.semester());
 
         ClassSession session = new ClassSession();
         session.setSubject(targetSubject);
         session.setTeacher(teacher);
-        session.setBatch(batch);
+        session.setSemester(semester);
         session.setTopic(attendanceRequest.topic() != null ? attendanceRequest.topic() : "Regular Lecture");
         session.setConductedAt(LocalDateTime.now());
         session.setCompleted(false);
@@ -68,13 +69,14 @@ public class AttendanceServiceImpl implements AttendanceService{
         String token = jwtService.generateTokenWithCustomData(
                 collegeId,
                 session.getSessionId(),
-                batch.getBatchId(),
+                semester.getSemesterNo(),
                 targetSubject,
                 attendanceRequest.teacherLat(),
                 attendanceRequest.teacherLng()
         );
 
-        return qrService.generateQR(token);
+        String qrToken = qrService.generateQR(token);
+        return new QRResponse(qrToken, session);
     }
 
     @Override

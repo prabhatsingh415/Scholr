@@ -1,6 +1,7 @@
 package com.scholr.scholr.controller;
 
 import com.scholr.scholr.dto.ApiResponse;
+import com.scholr.scholr.dto.QRResponse;
 import com.scholr.scholr.dto.StartAttendanceRequest;
 import com.scholr.scholr.dto.StudentAttendanceRequest;
 import com.scholr.scholr.entity.ClassSession;
@@ -31,16 +32,16 @@ public class AttendanceController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<ApiResponse<String>>
+    public ResponseEntity<ApiResponse<QRResponse>>
     getSubjects(@Valid @RequestBody StartAttendanceRequest attendanceRequest,
                 @AuthenticationPrincipal UserDetails userDetails){
 
-        String qrData = attendanceService.verifyAndGenerateQR(attendanceRequest, userDetails.getUsername());
+        QRResponse response = attendanceService.verifyAndGenerateQR(attendanceRequest, userDetails.getUsername());
 
         return ResponseEntity.ok(new ApiResponse<>(
                 true,
                 "Attendance QR generated Successfully!",
-                qrData,
+                response,
                 null,
                 LocalDateTime.now().toString()
         ));
