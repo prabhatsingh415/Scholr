@@ -1,5 +1,6 @@
 package com.scholr.scholr.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -13,16 +14,19 @@ public class ClassSession {
     private Long sessionId;
 
     @ManyToOne
+    @JsonIgnoreProperties({"sessions"})
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
     @ManyToOne
+    @JsonIgnoreProperties({"sessions", "subjects", "password"})
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
     @ManyToOne
-    @JoinColumn(name = "batch_id")
-    private Batch batch;
+    @JsonIgnoreProperties({"sessions", "batches", "students"})
+    @JoinColumn(name = "semester_no")
+    private Semester semester;
 
     private String topic;
     private LocalDateTime conductedAt = LocalDateTime.now();

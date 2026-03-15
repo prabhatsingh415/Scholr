@@ -16,7 +16,7 @@ public interface JwtService {
 
     Claims extractAllClaims(String token, String secretKey);
 
-    String generateTokenWithCustomData(String collegeId, Long sessionId, Long batchId, Subject targetSubject, Double latitude, Double longitude);
+    String generateTokenWithCustomData(String collegeId, Long sessionId, Integer semesterNo, Subject targetSubject, Double latitude, Double longitude);
 }
 
 
