@@ -1,101 +1,150 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
-import React, { useState } from "react";
-import { QrCode, X } from "lucide-react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  TextInput,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  QrCode,
+  Search,
+  User,
+  CheckCircle2,
+  Circle,
+} from "lucide-react-native";
 import useAttendanceSessionStore from "@/src/store/attendanceSessionStore";
+import QRScreen from "../teacher/QRScreen";
+import { useFetchStudentAttendance } from "@/src/hooks/teacher/useFetchStudentAttendance";
 
 const AttendanceScreen = ({ session, role }: any) => {
   const [showQR, setShowQr] = useState<boolean>(false);
-  const { qrCode, subjectName, topic } = useAttendanceSessionStore();
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const QrIcon = () => (
-    <View className="flex justify-center items-center bg-brand rounded-full w-20 h-20 absolute right-6 bottom-16 shadow-xl">
-      <TouchableOpacity onPress={() => setShowQr(true)}>
-        <QrCode size={40} color={"#ffffff"} />
-      </TouchableOpacity>
+  const { qrCode, subjectName, topic, subjectCode, semesterId, deptId } =
+    useAttendanceSessionStore();
+
+  console.log("🚀 PAYLOAD CHECK:", { subjectCode, semesterId, deptId });
+  const {
+    data: students,
+    isPending,
+    isError,
+    refetch,
+  } = useFetchStudentAttendance({
+    subjectCode,
+    semesterId,
+    deptId,
+  });
+
+  const filteredStudents = useMemo(() => {
+    const studentList = students?.data || [];
+    return studentList.filter((student: any) => {
+      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
+      const collegeId = student.collegeId.toLowerCase();
+      return (
+        fullName.includes(searchQuery.toLowerCase()) ||
+        collegeId.includes(searchQuery.toLowerCase())
+      );
+    });
+  }, [searchQuery, students]);
+
+  const StudentCard = ({ item }: any) => (
+    <View className="flex-row items-center bg-background-secondary/50 p-4 rounded-2xl mb-3 border border-white/5">
+      <View className="w-12 h-12 rounded-full bg-brand/20 items-center justify-center">
+        {item.profilePicURL ? (
+          <Image
+            source={{ uri: item.profilePicURL }}
+            className="w-12 h-12 rounded-full"
+          />
+        ) : (
+          <User size={24} color="#6366f1" />
+        )}
+      </View>
+
+      <View className="flex-1 ml-4">
+        <Text className="text-text-primary font-semibold text-base">
+          {item.firstName} {item.lastName}
+        </Text>
+        <Text className="text-text-secondary text-xs uppercase">
+          {item.collegeId}
+        </Text>
+      </View>
+
+      <View className="items-end">
+        <CheckCircle2 size={20} color="#22c55e" />
+        <Text className="text-[10px] text-green-500 mt-1 font-bold">
+          PRESENT
+        </Text>
+      </View>
     </View>
   );
 
   if (showQR) {
     return (
-      <SafeAreaView className="mb-8 flex-1 bg-background-primary px-4 justify-center">
-        <View className="bg-background-secondary p-6 rounded-[40px] shadow-2xl items-center">
-          <Text className="text-text-primary text-2xl font-bold mb-1">
-            Attendance QR Code
-          </Text>
-          <Text className="text-text-secondary text-base mb-1">
-            {subjectName}
-          </Text>
-          <Text className="text-text-secondary text-sm mb-6">
-            Semester {session?.subject?.semester.semesterNo || "Nil"}
-          </Text>
-
-          <View className="bg-background-primary p-4 rounded-3xl border border-gray-800">
-            {qrCode ? (
-              <Image
-                source={{ uri: `data:image/png;base64,${qrCode}` }}
-                style={{ width: 250, height: 250 }}
-                resizeMode="contain"
-              />
-            ) : (
-              <View
-                style={{ width: 250, height: 250 }}
-                className="justify-center items-center"
-              >
-                <Text className="text-red-500">QR Not Found</Text>
-              </View>
-            )}
-          </View>
-
-          <View className="w-full mt-6 bg-background-primary/50 p-4 rounded-2xl">
-            <View className="flex-row justify-between mb-2">
-              <Text className="text-text-secondary">Topic:</Text>
-              <Text className="text-text-primary font-medium">
-                {topic || "N/A"}
-              </Text>
-            </View>
-            <View className="flex-row justify-between">
-              <Text className="text-text-secondary">Generated:</Text>
-              <Text className="text-text-primary font-medium">
-                {new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </View>
-          </View>
-
-          <Text className="text-text-secondary text-center text-xs mt-6 px-4">
-            Students can scan this QR code to mark their attendance
-            automatically.
-          </Text>
-
-          <TouchableOpacity
-            onPress={() => setShowQr(false)}
-            className="bg-brand w-full py-4 rounded-2xl mt-8 flex-row justify-center items-center"
-          >
-            <Text className="text-white font-bold text-lg">Close</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <QRScreen
+        subjectName={subjectName}
+        semesterNo={session?.subject?.semester.semesterNo}
+        qrCode={qrCode}
+        topic={topic}
+        setShowQr={setShowQr}
+      />
     );
   }
 
   return (
-    <View className="flex-1 bg-background-primary justify-center items-center">
-      <View className="items-center">
-        <Text className="text-text-secondary text-lg mb-2">Active Session</Text>
-        <Text className="text-4xl font-bold text-text-primary text-center px-6">
-          {session?.subject?.subjectName}
+    <View className="flex-1 bg-background-primary">
+      <View className="pt-14 pb-6 px-6 bg-background-secondary/30 rounded-b-[40px]">
+        <Text className="text-text-secondary text-sm font-medium">
+          Active Session
         </Text>
-        <View className="bg-brand/10 px-4 py-1 rounded-full mt-4">
-          <Text className="text-brand font-medium uppercase tracking-widest">
-            {role}
-          </Text>
+        <Text className="text-2xl font-bold text-text-primary mb-4">
+          {subjectName}
+        </Text>
+
+        <View className="flex-row items-center bg-background-primary/80 px-4 py-3 rounded-2xl border border-white/10">
+          <Search size={20} color="#94a3b8" />
+          <TextInput
+            placeholder="Search students..."
+            placeholderTextColor="#64748b"
+            className="flex-1 ml-3 text-text-primary"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
         </View>
       </View>
 
-      <QrIcon />
+      <View className="flex-1 px-6 pt-6">
+        {isPending ? (
+          <ActivityIndicator size="large" color="#6366f1" className="mt-20" />
+        ) : isError ? (
+          <TouchableOpacity onPress={() => refetch()} className="mt-20">
+            <Text className="text-red-500 text-center">
+              Server Error! Tap to retry.
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <FlatList
+            data={filteredStudents}
+            keyExtractor={(item) => item.userId.toString()}
+            renderItem={({ item }) => <StudentCard item={item} />}
+            ListEmptyComponent={
+              <Text className="text-text-secondary text-center mt-10">
+                No students in this class.
+              </Text>
+            }
+            contentContainerStyle={{ paddingBottom: 100 }}
+          />
+        )}
+      </View>
+
+      <TouchableOpacity
+        onPress={() => setShowQr(true)}
+        className="bg-brand rounded-full w-16 h-16 absolute right-6 bottom-10 shadow-2xl justify-center items-center"
+      >
+        <QrCode size={30} color={"#ffffff"} />
+      </TouchableOpacity>
     </View>
   );
 };
