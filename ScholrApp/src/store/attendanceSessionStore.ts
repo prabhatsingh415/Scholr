@@ -6,6 +6,9 @@ import { createJSONStorage, devtools, persist } from "zustand/middleware";
 const store = (set: any): AttendanceSessionState => ({
   sessionId: null,
   subjectName: "",
+  subjectCode: "",
+  semesterId: null,
+  deptId: null,
   qrCode: null,
   topic: "",
   isActive: false,
@@ -14,6 +17,9 @@ const store = (set: any): AttendanceSessionState => ({
     set({
       sessionId: session.sessionId,
       subjectName: session.subject.subjectName,
+      subjectCode: session.subject.subjectCode,
+      semesterId: session.subject.semester.id,
+      deptId: session.subject.department.id,
       qrCode: qrCodeBase64,
       topic: session.topic,
       isActive: true,

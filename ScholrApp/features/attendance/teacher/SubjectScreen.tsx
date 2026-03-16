@@ -66,6 +66,7 @@ const SubjectScreen = () => {
           onSuccess: (response) => {
             if (response?.data) {
               setSession(response.data.qrCodeBase64, response.data.session);
+              console.log("session ", response.data.session);
               queryClient.invalidateQueries({ queryKey: ["activeSession"] });
             } else {
               triggerError("Something went wrong ! please try again later...");
@@ -89,7 +90,7 @@ const SubjectScreen = () => {
       <Text className="text-text-primary text-lg font-bold">
         {item.subjectName}
       </Text>
-      <Text className="text-text-secondary">Semester: {item.semester}</Text>
+      <Text className="text-text-secondary">Semester: {item.department}</Text>
       <TouchableOpacity
         disabled={generating}
         onPress={() => handleGeneration(item)}
