@@ -6,7 +6,7 @@ import com.scholr.scholr.dto.StudentAttendanceRequest;
 import com.scholr.scholr.entity.*;
 import com.scholr.scholr.enums.AttendanceMode;
 import com.scholr.scholr.enums.AttendanceStatus;
-import com.scholr.scholr.enums.ManualAttendanceRequest;
+import com.scholr.scholr.dto.ManualAttendanceRequest;
 import com.scholr.scholr.exception.*;
 import com.scholr.scholr.repository.AttendanceRepository;
 import com.scholr.scholr.utils.LocationUtils;

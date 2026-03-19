@@ -1,4 +1,6 @@
-package com.scholr.scholr.enums;
+package com.scholr.scholr.dto;
+
+import com.scholr.scholr.enums.AttendanceStatus;
 
 public record ManualAttendanceRequest(
         String collegeId,

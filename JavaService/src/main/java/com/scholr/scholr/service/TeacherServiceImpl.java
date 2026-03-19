@@ -7,6 +7,7 @@ import com.scholr.scholr.entity.Teacher;
 import com.scholr.scholr.entity.User;
 import com.scholr.scholr.exception.StudentCanNotHaveSubjectsException;
 import com.scholr.scholr.exception.UserNotFoundException;
+import com.scholr.scholr.repository.TeacherRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +17,10 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-
 public class TeacherServiceImpl implements TeacherService {
 
     private final UserService userService;
+    private final TeacherRepository repository;
 
     @Override
     @Transactional(readOnly = true)
@@ -47,5 +48,10 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     public List<StudentDTO> fetchStudentWithSub(FetchStudentWithSubRequest request) {
         return userService.fetchStudentWithSub(request);
+    }
+
+    @Override
+    public User save(Teacher newTeacher) {
+        return repository.save(newTeacher);
     }
 }
