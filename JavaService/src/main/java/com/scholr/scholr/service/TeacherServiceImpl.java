@@ -1,5 +1,7 @@
 package com.scholr.scholr.service;
 
+import com.scholr.scholr.dto.FetchStudentWithSubRequest;
+import com.scholr.scholr.dto.StudentDTO;
 import com.scholr.scholr.dto.SubjectData;
 import com.scholr.scholr.entity.Teacher;
 import com.scholr.scholr.entity.User;
@@ -34,9 +36,16 @@ public class TeacherServiceImpl implements TeacherService {
         return teacher.getSubjects().stream()
                 .map(sub -> new SubjectData(
                         sub.getSubjectName(),
+                        sub.getSubjectCode(),
+                        sub.getDepartment().getDeptName(),
                         sub.getSemester().getSemesterNo(),
                         sub.getSemester().getYear()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StudentDTO> fetchStudentWithSub(FetchStudentWithSubRequest request) {
+        return userService.fetchStudentWithSub(request);
     }
 }

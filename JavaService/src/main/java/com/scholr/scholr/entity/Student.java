@@ -22,6 +22,10 @@ public class Student extends User {
     @Column(nullable = false)
     private String courseName;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "semester_id")
+    private Semester semester;
+
     @ManyToOne
     private Batch batch;
 

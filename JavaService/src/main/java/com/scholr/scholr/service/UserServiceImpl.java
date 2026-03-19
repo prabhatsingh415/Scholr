@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -85,7 +86,7 @@ public class UserServiceImpl implements UserService{
 
         return new UserDataResponse(
                 collegeId, firstName, lastName, email, role,
-                user.getProfilePicURL(), user.getDeptId(), user.isVerified(),
+                user.getProfilePicURL(), user.getDepartment().getDeptId(), user.isVerified(),
                 isHod, rollNo, batchId, courseName
         );
     }
@@ -139,6 +140,11 @@ public class UserServiceImpl implements UserService{
         return this.mapToDashboardDTO(user) ;
     }
 
+    @Override
+    public List<StudentDTO> fetchStudentWithSub(FetchStudentWithSubRequest request) {
+        return repository.fetchStudentsForAttendance(request.subjectCode(), request.semesterId(), request.deptId());
+    }
+
     private DashboardDataResponse mapToDashboardDTO(User user) {
         // Common Fields
         String collegeId = user.getCollegeId();
@@ -147,7 +153,7 @@ public class UserServiceImpl implements UserService{
         String email = user.getEmail();
         String phoneNo = user.getPhoneNo();
         String profilePicURL = user.getProfilePicURL();
-        String deptId = user.getDeptId();
+        String deptId = user.getDepartment().getDeptId();
         String role = user.getRole().name();
 
         // Student Specific Fields

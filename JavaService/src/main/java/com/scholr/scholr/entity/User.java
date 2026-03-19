@@ -32,7 +32,10 @@ public abstract class User {
     private Role role;
 
     private String profilePicURL;
-    private String deptId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dept_id")
+    private Department department;
 
     @Column(nullable = false)
     private boolean isVerified = false;

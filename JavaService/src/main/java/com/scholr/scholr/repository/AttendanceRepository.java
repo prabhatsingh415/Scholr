@@ -5,8 +5,12 @@ import com.scholr.scholr.entity.ClassSession;
 import com.scholr.scholr.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     boolean existsByStudentAndSession(Student student, ClassSession session);
 
+    Optional<Attendance> findByStudentAndSession(Student student, ClassSession session);
 }
+
 

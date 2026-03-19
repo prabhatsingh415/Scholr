@@ -28,6 +28,11 @@ public class ClassSession {
     @JoinColumn(name = "semester_no")
     private Semester semester;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dept_id")
+    @JsonIgnoreProperties({"deptId", "deptName"})
+    private Department department;
+
     private String topic;
     private LocalDateTime conductedAt = LocalDateTime.now();
     private boolean isCompleted = true;

@@ -2,17 +2,12 @@ package com.scholr.scholr;
 
 import com.scholr.scholr.entity.*;
 import com.scholr.scholr.enums.Role;
-import com.scholr.scholr.repository.BatchRepository;
-import com.scholr.scholr.repository.SemesterRepository;
-import com.scholr.scholr.repository.SubjectRepository;
-import com.scholr.scholr.repository.UserRepository;
-import com.scholr.scholr.service.PasswordService;
+import com.scholr.scholr.repository.*;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import java.time.LocalDate;
 
 @Configuration
@@ -25,17 +20,20 @@ public class DataInitializer {
             SubjectRepository subjectRepository,
             BatchRepository batchRepository,
             SemesterRepository semesterRepository,
+            DepartmentRepository departmentRepository,
             BCryptPasswordEncoder bCryptPasswordEncoder
     ) {
         return args -> {
 
-
+            Department csDept = new Department();
+            csDept.setDeptId("CS-01");
+            csDept.setDeptName("Computer Science");
+            departmentRepository.save(csDept);
 
             Semester sem4 = new Semester();
             sem4.setSemesterNo(4);
             sem4.setYear(2024);
             semesterRepository.save(sem4);
-
 
             Teacher teacher = new Teacher();
             teacher.setCollegeId("T-101");
@@ -43,6 +41,7 @@ public class DataInitializer {
             teacher.setFirstName("Dr. Khushhal");
             teacher.setRole(Role.TEACHER);
             teacher.setVerified(true);
+            teacher.setDepartment(csDept);
             teacher.setPassword(bCryptPasswordEncoder.encode("Password@123"));
             userRepository.save(teacher);
 
@@ -52,13 +51,16 @@ public class DataInitializer {
             javaSub.setSubjectCode("CS401");
             javaSub.setTeacher(teacher);
             javaSub.setSemester(sem4);
+            javaSub.setDepartment(csDept);
             subjectRepository.save(javaSub);
 
-            // 4. Batch Create Karo
+
             Batch batch2026 = new Batch();
             batch2026.setSemester(sem4);
+            batch2026.setDepartment(csDept);
             batch2026.setActive(true);
             batchRepository.save(batch2026);
+
 
             Student student = new Student();
             student.setCollegeId("ST-01");
@@ -66,22 +68,18 @@ public class DataInitializer {
             student.setFirstName("Prabhat");
             student.setLastName("Singh");
             student.setRole(Role.STUDENT);
+            student.setDepartment(csDept);
+            student.setSemester(sem4);
             student.setBatch(batch2026);
             student.setCourseName("B.TECH");
             student.setRollNo("ROLL-123");
             student.setDateOfJoining(LocalDate.now());
             student.setExpectedDateOfGraduation(LocalDate.now().plusYears(4));
-            student.setCgpa(0.0);
             student.setVerified(true);
-
             student.setPassword(bCryptPasswordEncoder.encode("Password@123"));
-
             userRepository.save(student);
 
-            System.out.println("🚀 Testing Data Loaded Successfully!");
-
-            System.out.println("🚀 Testing Data Loaded!");
-            System.out.println("Teacher ID: T-101 | Batch ID: " + batch2026.getBatchId());
+            System.out.println("🚀 Scholr Demo Data Loaded Successfully!");
         };
     }
 }

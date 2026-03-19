@@ -44,8 +44,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Extract JWT from "Authorization" header
         final String authHeader = request.getHeader("Authorization");
 
-        log.info("Authorization header: {}", authHeader);
-
         // If header is missing OR does not start with " Bearer ", skip and continue the filter chain
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
