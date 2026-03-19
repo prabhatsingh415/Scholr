@@ -21,7 +21,8 @@ public class DataInitializer {
             BatchRepository batchRepository,
             SemesterRepository semesterRepository,
             DepartmentRepository departmentRepository,
-            BCryptPasswordEncoder bCryptPasswordEncoder
+            BCryptPasswordEncoder bCryptPasswordEncoder,
+            AdminRepository adminRepository
     ) {
         return args -> {
 
@@ -78,6 +79,16 @@ public class DataInitializer {
             student.setVerified(true);
             student.setPassword(bCryptPasswordEncoder.encode("Password@123"));
             userRepository.save(student);
+
+
+            Admin admin = new Admin();
+            admin.setCollegeId("AD-01");
+            admin.setPassword(bCryptPasswordEncoder.encode("Password@123"));
+            admin.setVerified(true);
+            admin.setRole(Role.ADMIN);
+            admin.setDepartment(csDept);
+
+            adminRepository.save(admin);
 
             System.out.println("🚀 Scholr Demo Data Loaded Successfully!");
         };

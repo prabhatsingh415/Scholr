@@ -58,12 +58,15 @@ public class GlobalExceptionHandler {
             ActiveSessionException.class,
             AlreadyVerifiedException.class,
             InvalidOTPException.class,
-            PasswordSameAsOldException.class
+            PasswordSameAsOldException.class,
+            UserAlreadyExistsException.class,
+            InvalidDepartmentIdException.class,
+            InvalidSemesterIdException.class,
+            InvalidBatchIdException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleBadRequest(Exception ex) {
         logErrorLocation(ex);
 
-        // Custom error codes for frontend logic
         String errorCode = "BAD_REQ_001";
         if (ex instanceof OutOfRangeException) errorCode = "ATT_001";
         if (ex instanceof AlreadyMarkedException) errorCode = "ATT_002";

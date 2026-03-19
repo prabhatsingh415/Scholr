@@ -1,5 +1,7 @@
 package com.scholr.scholr.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.scholr.scholr.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -26,6 +28,8 @@ public abstract class User {
     @Email
     private String email;
     private String phoneNo;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Enumerated(EnumType.STRING)

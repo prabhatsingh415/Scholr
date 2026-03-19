@@ -3,6 +3,7 @@ package com.scholr.scholr.service;
 
 import com.scholr.scholr.dto.*;
 import com.scholr.scholr.entity.User;
+import com.scholr.scholr.enums.Role;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,7 +27,13 @@ public interface UserService {
     DashboardDataResponse getUserProfile(String collegeId);
 
     List<StudentDTO> fetchStudentWithSub(FetchStudentWithSubRequest request);
+
+    List<UserDTO> findByRole(Role role);
+
+    List<User> findAllByRole(Role role);
 }
+
+
 
 
 
