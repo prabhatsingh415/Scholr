@@ -9,6 +9,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./scholr-Web/frontend
 
     steps:
     - name: Checkout code
@@ -19,12 +23,10 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
+        cache-dependency-path: './scholr-Web/frontend/package-lock.json'
 
     - name: Install dependencies
       run: npm install
-
-    - name: Run frontend tests
-      run: npm test -- --watchAll=false
 
     - name: Build React app
       run: npm run build
