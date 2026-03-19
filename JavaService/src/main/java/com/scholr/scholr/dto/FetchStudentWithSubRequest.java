@@ -1,4 +1,7 @@
 package com.scholr.scholr.dto;
 
-public class FetchStudentWithSubRequest {
-}
+public record FetchStudentWithSubRequest(
+        String subjectCode,
+        Long semesterId,
+        Long deptId
+        ){}

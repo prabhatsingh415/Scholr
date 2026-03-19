@@ -5,8 +5,8 @@ import com.scholr.scholr.dto.QRResponse;
 import com.scholr.scholr.dto.StartAttendanceRequest;
 import com.scholr.scholr.dto.StudentAttendanceRequest;
 import com.scholr.scholr.entity.ClassSession;
+import com.scholr.scholr.enums.ManualAttendanceRequest;
 import com.scholr.scholr.service.AttendanceService;
-import com.scholr.scholr.service.QRService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -62,5 +62,21 @@ public class AttendanceController {
 
         String result = attendanceService.markAttendance(request, student.getUsername());
         return ResponseEntity.ok(new ApiResponse<>(true, "Attendance Marked", result, null, LocalDateTime.now().toString()));
+    }
+
+
+    @PostMapping("/manual-toggle")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ApiResponse<String>> markAttendance( @Valid @RequestBody ManualAttendanceRequest request){
+        attendanceService.toggleAttendance(request);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "Attendance Marked Successfully as "+ request.status(),
+                null,
+                null,
+                LocalDateTime.now().toString()
+
+        ));
     }
 }

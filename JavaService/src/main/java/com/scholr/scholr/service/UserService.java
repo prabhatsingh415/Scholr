@@ -1,14 +1,12 @@
 package com.scholr.scholr.service;
 
 
-import com.scholr.scholr.dto.ChangePasswordRequest;
-import com.scholr.scholr.dto.DashboardDataResponse;
-import com.scholr.scholr.dto.UpdateNameRequest;
-import com.scholr.scholr.dto.UserDataResponse;
+import com.scholr.scholr.dto.*;
 import com.scholr.scholr.entity.User;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
@@ -26,6 +24,8 @@ public interface UserService {
     void updatePassword(String collegeId, @Valid ChangePasswordRequest request);
 
     DashboardDataResponse getUserProfile(String collegeId);
+
+    List<StudentDTO> fetchStudentWithSub(FetchStudentWithSubRequest request);
 }
 
 

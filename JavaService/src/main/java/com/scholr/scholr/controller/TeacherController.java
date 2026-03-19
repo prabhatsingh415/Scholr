@@ -1,8 +1,6 @@
 package com.scholr.scholr.controller;
 
-import com.scholr.scholr.dto.ApiResponse;
-import com.scholr.scholr.dto.StartAttendanceRequest;
-import com.scholr.scholr.dto.SubjectData;
+import com.scholr.scholr.dto.*;
 import com.scholr.scholr.service.QRService;
 import com.scholr.scholr.service.TeacherService;
 import jakarta.validation.Valid;
@@ -41,5 +39,18 @@ public class TeacherController {
         );
     }
 
+    @PostMapping("/attendance/students")
+    public ResponseEntity<ApiResponse<?>> fetchStudentsWithSub(@Valid @RequestBody FetchStudentWithSubRequest request){
+
+        List<StudentDTO> response = teacherService.fetchStudentWithSub(request);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "students fetched successfully !",
+                response,
+                null,
+                LocalDateTime.now().toString()
+        ) );
+    }
 
 }

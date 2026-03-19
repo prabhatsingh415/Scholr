@@ -1,5 +1,6 @@
 package com.scholr.scholr.entity;
 
+import com.scholr.scholr.enums.AttendanceMode;
 import com.scholr.scholr.enums.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -24,6 +25,9 @@ public class Attendance {
 
     @Enumerated(EnumType.STRING)
     private AttendanceStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private AttendanceMode mode;
 
     private LocalDateTime markedAt = LocalDateTime.now();
 }

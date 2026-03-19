@@ -4,7 +4,9 @@ import com.scholr.scholr.dto.QRResponse;
 import com.scholr.scholr.dto.StartAttendanceRequest;
 import com.scholr.scholr.dto.StudentAttendanceRequest;
 import com.scholr.scholr.entity.*;
+import com.scholr.scholr.enums.AttendanceMode;
 import com.scholr.scholr.enums.AttendanceStatus;
+import com.scholr.scholr.enums.ManualAttendanceRequest;
 import com.scholr.scholr.exception.*;
 import com.scholr.scholr.repository.AttendanceRepository;
 import com.scholr.scholr.utils.LocationUtils;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -35,6 +38,7 @@ public class AttendanceServiceImpl implements AttendanceService{
     private String qrSecret;
 
     @Override
+    @Transactional
     public QRResponse verifyAndGenerateQR(StartAttendanceRequest attendanceRequest, String collegeId) {
         User user = userService.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UserNotFoundException("CollegeId not found!"));
@@ -58,6 +62,7 @@ public class AttendanceServiceImpl implements AttendanceService{
         session.setSubject(targetSubject);
         session.setTeacher(teacher);
         session.setSemester(semester);
+        session.setDepartment(targetSubject.getDepartment());
         session.setTopic(attendanceRequest.topic() != null ? attendanceRequest.topic() : "Regular Lecture");
         session.setConductedAt(LocalDateTime.now());
         session.setCompleted(false);
@@ -80,6 +85,7 @@ public class AttendanceServiceImpl implements AttendanceService{
     }
 
     @Override
+    @Transactional
     public String markAttendance(StudentAttendanceRequest request, String collegeId) {
 
         Claims claims = jwtService.extractAllClaims(request.token(), qrSecret);
@@ -91,7 +97,7 @@ public class AttendanceServiceImpl implements AttendanceService{
         Long sessionId = claims.get("sid", Long.class);
         Double teacherLat = claims.get("lat", Double.class);
         Double teacherLng = claims.get("lng", Double.class);
-        Long batchIdFromToken = claims.get("bid", Long.class);
+        Integer semesterNoFromToken = claims.get("sno", Integer.class);
 
         ClassSession session = classSessionService.findById(sessionId)
                 .orElseThrow(() -> new SessionNotFoundException("Session invalid"));
@@ -104,8 +110,8 @@ public class AttendanceServiceImpl implements AttendanceService{
                 .orElseThrow(() -> new UserNotFoundException("Student not found"));
 
 
-        if (!student.getBatch().getBatchId().equals(batchIdFromToken)) {
-            throw new BatchMismatchException("This is not your batch's class!");
+        if (!student.getSemester().getSemesterNo().equals(semesterNoFromToken)) {
+            throw new BatchMismatchException("This is not your Semester's class!");
         }
 
 
@@ -133,6 +139,7 @@ public class AttendanceServiceImpl implements AttendanceService{
         attendance.setSession(session);
         attendance.setMarkedAt(LocalDateTime.now());
         attendance.setStatus(AttendanceStatus.PRESENT);
+        attendance.setMode(AttendanceMode.AUTO);
 
         repository.save(attendance);
 
@@ -155,5 +162,37 @@ public class AttendanceServiceImpl implements AttendanceService{
                 .orElseThrow(() -> new SessionNotFoundException("Session not found"));
         session.setCompleted(true);
         classSessionService.save(session);
+    }
+
+    @Override
+    @Transactional
+    public void toggleAttendance(ManualAttendanceRequest request) {
+        ClassSession session = classSessionService.findById(request.sessionId())
+                .orElseThrow(() -> new SessionNotFoundException("Session not found"));
+
+        if(session.isCompleted())throw new SessionClosedException("Cannot mark attendance. The session has already been completed.");
+
+        Student student = (Student) userService.findByCollegeId(request.collegeId())
+                          .orElseThrow(() -> new UserNotFoundException("Student not found !"));
+
+        Optional<Attendance> existingAttendance = repository.findByStudentAndSession(student, session);
+
+
+        Attendance attendance;
+        if(existingAttendance.isPresent()) {
+            // just toggle the attendance
+            attendance = existingAttendance.get();
+            attendance.setStatus(request.status());
+            attendance.setMarkedAt(LocalDateTime.now());
+        }else {
+            // create a new instance
+            attendance = new Attendance();
+            attendance.setStudent(student);
+            attendance.setSession(session);
+            attendance.setMarkedAt(LocalDateTime.now());
+            attendance.setStatus(request.status());
+        }
+        attendance.setMode(AttendanceMode.MANUAL);
+        repository.save(attendance);
     }
 }
