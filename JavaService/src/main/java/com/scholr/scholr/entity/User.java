@@ -33,6 +33,8 @@ public abstract class User {
 
     private String profilePicURL;
 
+    private String fcmId; // for push notification
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dept_id")
     private Department department;
