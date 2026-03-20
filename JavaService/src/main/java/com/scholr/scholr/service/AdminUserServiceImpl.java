@@ -32,13 +32,17 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Transactional
     @Override
     public List<User> addStudentsBulk(List<StudentAddRequest> requests) {
-        return requests.stream().map(this::addStudent).toList();
+        return requests.stream()
+                .map(this::addStudent)
+                .toList();
     }
 
     @Transactional
     @Override
     public List<User> addTeachersBulk(List<TeacherAddRequest> requests) {
-        return requests.stream().map(this::addTeacher).toList();
+        return requests.stream()
+                .map(this::addTeacher)
+                .toList();
     }
 
 //    @Transactional
