@@ -28,4 +28,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("semesterId") Long semesterId,
             @Param("deptId") Long deptId
     );
+
+    @Query("SELECT s.fcmId FROM Student s " +
+            "WHERE s.semester.Id = :semesterId " +
+            "AND s.department.deptId = :deptId " +
+            "AND s.fcmId IS NOT NULL")
+    List<String> findAllFcmTokensBySemesterAndDepartment(
+            @Param("semesterId") Long semesterId,
+            @Param("deptId") String deptId
+
+
+    );
 }

@@ -26,7 +26,10 @@ public interface UserService {
     DashboardDataResponse getUserProfile(String collegeId);
 
     List<StudentDTO> fetchStudentWithSub(FetchStudentWithSubRequest request);
+
+    List<String> findAllFcmTokensBySemesterAndDepartment(Long id, String deptId);
 }
+
 
 
 

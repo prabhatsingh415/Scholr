@@ -145,6 +145,11 @@ public class UserServiceImpl implements UserService{
         return repository.fetchStudentsForAttendance(request.subjectCode(), request.semesterId(), request.deptId());
     }
 
+    @Override
+    public List<String> findAllFcmTokensBySemesterAndDepartment(Long semesterId, String deptId) {
+        return repository.findAllFcmTokensBySemesterAndDepartment(semesterId, deptId);
+    }
+
     private DashboardDataResponse mapToDashboardDTO(User user) {
         // Common Fields
         String collegeId = user.getCollegeId();
