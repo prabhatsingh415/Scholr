@@ -33,6 +33,8 @@ public class AttendanceServiceImpl implements AttendanceService{
     private final QRService qrService;
     private final AttendanceRepository repository;
     private final SemesterService semesterService;
+    private final NotificationService notificationService;
+
 
     @Value("${QR_SECRET}")
     private String qrSecret;
@@ -81,6 +83,9 @@ public class AttendanceServiceImpl implements AttendanceService{
         );
 
         String qrToken = qrService.generateQR(token);
+
+        notificationService.sendQRNotification(session.getSemester(), session.getDepartment(), targetSubject.getSubjectName(), session.getSessionId());
+
         return new QRResponse(qrToken, session);
     }
 
@@ -91,8 +96,8 @@ public class AttendanceServiceImpl implements AttendanceService{
         Claims claims = jwtService.extractAllClaims(request.token(), qrSecret);
 
         if (claims.getExpiration().before(new Date())) {
-            throw new TokenExpiredException("Session Expired ! contact teacher for manual attendance mark.");
-        }
+            log.warn("[Attendance] Expired QR scanned by student: {}", collegeId);
+            throw new TokenExpiredException("Attendance session has expired. Please request the teacher for manual verification.");        }
 
         Long sessionId = claims.get("sid", Long.class);
         Double teacherLat = claims.get("lat", Double.class);
@@ -100,24 +105,38 @@ public class AttendanceServiceImpl implements AttendanceService{
         Integer semesterNoFromToken = claims.get("sno", Integer.class);
 
         ClassSession session = classSessionService.findById(sessionId)
-                .orElseThrow(() -> new SessionNotFoundException("Session invalid"));
+                .orElseThrow(() -> new SessionNotFoundException("Invalid or non-existent attendance session."));
 
-        if (session.isCompleted())
-            throw new SessionClosedException("Teacher has ended this session. Attendance closed!");
+        if (session.isCompleted()) {
+            log.info("[Attendance] Attempt to mark attendance for closed session: {}", sessionId);
+            throw new SessionClosedException("The Teacher has closed this session. Attendance is no longer being accepted.");
+        }
 
 
         Student student = (Student) userService.findByCollegeId(collegeId)
-                .orElseThrow(() -> new UserNotFoundException("Student not found"));
+                .orElseThrow(() -> new UserNotFoundException("Student record not found for ID: " + collegeId));
+
+
+        if (student.getDeviceId() == null) {
+            student.setDeviceId(request.deviceId());
+            userService.save(student);
+            log.info("[Security] New device ID bound for student: {}", collegeId);
+        } else if (!student.getDeviceId().equals(request.deviceId())) {
+            log.error("[Security] Device mismatch detected for {}. Expected: {}, Received: {}",
+                    collegeId, student.getDeviceId(), request.deviceId());
+            throw new DeviceMismatchException("Security Alert: Device mismatch detected. Attendance must be marked using your registered device.");
+        }
 
 
         if (!student.getSemester().getSemesterNo().equals(semesterNoFromToken)) {
-            throw new BatchMismatchException("This is not your Semester's class!");
+            log.warn("[Attendance] Batch mismatch for student {}: Expected Sem {}", collegeId, semesterNoFromToken);
+            throw new BatchMismatchException("Access Denied: This session is not scheduled for your current semester.");
         }
 
 
         // Duplicate Check (One student, one session, one attendance)
         if (repository.existsByStudentAndSession(student, session)) {
-            throw new AlreadyMarkedException("Attendance already marked !");
+            throw new AlreadyMarkedException("Your attendance for this session has already been recorded.");
         }
 
         //calculate the distance between the teacher and student's location
@@ -129,8 +148,9 @@ public class AttendanceServiceImpl implements AttendanceService{
         );
 
 
-        if(distance > 50.0){
-            throw new OutOfRangeException("You are to far, go in the class! Distance: " + (int)distance + "m");
+        if (distance > 50.0) {
+            log.warn("[Attendance] Out-of-range attempt by {}. Distance: {}m", collegeId, (int)distance);
+            throw new OutOfRangeException(String.format("Location mismatch: You must be inside the classroom to mark attendance. Current distance: %dm", (int)distance));
         }
 
 
@@ -143,8 +163,8 @@ public class AttendanceServiceImpl implements AttendanceService{
 
         repository.save(attendance);
 
-        return "Attendance marked! Distance was " + (int)distance + " meters.";
-    }
+        log.info("[Attendance] Success: Student {} marked present for session {}. Distance: {}m", collegeId, sessionId, (int)distance);
+        return String.format("Attendance recorded successfully. Verification distance: %d meters.", (int)distance);    }
 
     @Override
     public ClassSession getActiveTeacherSession(String username) {

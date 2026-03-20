@@ -17,6 +17,9 @@ public class DeviceManagementServiceImpl implements DeviceManagementService {
 
     private final UserRepository userRepository;
 
+
+    // TODO: Add an API for admin to reset the device ID for a specific student
+
     @Override
     @Transactional
     public void checkAndRegister(String deviceId, String fcmId, String collegeId) {
