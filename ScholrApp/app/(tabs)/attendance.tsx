@@ -8,7 +8,7 @@ import AttendanceScreen from "@/features/attendance/components/AttendanceScreen"
 import { Role } from "@/types/user";
 import Skeleton from "@/components/ui/Skeleton";
 import SubjectScreen from "@/features/attendance/teacher/SubjectScreen";
-
+import ScannerScreen from "@/features/attendance/student/ScannerScreen";
 const attendance = () => {
   const user = useUserStore((state) => state.user);
   const { data: session, isPending } = useSession();
@@ -30,7 +30,7 @@ const attendance = () => {
           ) : (
             <AttendanceScreen role={Role.TEACHER} session={session} />
           ))
-        : (console.log("yahase "), (<AttendanceScreen role={Role.STUDENT} />))}
+        : (console.log("yahase "), (<ScannerScreen />))}
     </SafeAreaView>
   );
 };

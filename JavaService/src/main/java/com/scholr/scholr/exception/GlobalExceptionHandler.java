@@ -58,7 +58,8 @@ public class GlobalExceptionHandler {
             ActiveSessionException.class,
             AlreadyVerifiedException.class,
             InvalidOTPException.class,
-            PasswordSameAsOldException.class
+            PasswordSameAsOldException.class,
+            DeviceMismatchException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleBadRequest(Exception ex) {
         logErrorLocation(ex);

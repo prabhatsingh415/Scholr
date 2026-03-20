@@ -8,13 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import React, { useMemo, useState } from "react";
-import {
-  QrCode,
-  Search,
-  User,
-  CheckCircle2,
-  Circle,
-} from "lucide-react-native";
+import { QrCode, Search, User, CheckCircle2 } from "lucide-react-native";
 import useAttendanceSessionStore from "@/src/store/attendanceSessionStore";
 import QRScreen from "../teacher/QRScreen";
 import { useFetchStudentAttendance } from "@/src/hooks/teacher/useFetchStudentAttendance";

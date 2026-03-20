@@ -18,4 +18,7 @@ public class AuthRequest {
             message = "Password must contain at least one uppercase, one lowercase, one number, and one special character (@$&~`!). No dashes allowed."
     )
     private String password;
+
+    private String fcmId;
+    private String deviceId;
 }
