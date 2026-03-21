@@ -11,12 +11,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MessageBrokerConfig {
     public static final String QUEUE_NAME = "scholr.auth.sync.queue";
-    public static final String EXCHANGE_NAME = "scholr.auth.exchange";
+    public static final String ROUTING_KEY = "auth.sync.key";
+
 
     public static final String NOTIFICATION_QUEUE = "scholr.notification.push.queue";
     public static final String NOTIFICATION_ROUTING_KEY = "notification.push.key";
 
-    public static final String ROUTING_KEY = "auth.sync.key";
+    public static final String EXCHANGE_NAME = "scholr.auth.exchange";
 
     @Bean
     public Queue queue() {

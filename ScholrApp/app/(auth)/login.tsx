@@ -17,8 +17,10 @@ import useAuthStore from "@/src/store/authStore";
 import Footer from "@/components/ui/Footer";
 import Loader from "@/components/ui/Loader";
 import useUserStore from "@/src/store/userStore";
+import messaging from "@react-native-firebase/messaging";
+import DeviceInfo from "react-native-device-info";
 
-const login = () => {
+export default function login() {
   const setTokens = useAuthStore((state: any) => state.setTokens);
   const setUser = useUserStore((state: any) => state.setData);
 
@@ -27,34 +29,50 @@ const login = () => {
 
   const { mutate, isPending } = useLogin();
 
-  const handleLogin = (formData: any) => {
-    mutate(formData, {
-      onSuccess: (response) => {
-        const backendResponse = response.data;
-        if (backendResponse && backendResponse.success) {
-          const access = backendResponse.data.access_token;
+  const handleLogin = async (formData: any) => {
+    try {
+      await messaging().requestPermission();
+      const fcmId = await messaging().getToken();
+      const deviceId = await DeviceInfo.getUniqueId();
 
-          const rawCookie =
-            response.headers?.["set-cookie"]?.[0] ||
-            response.headers?.["Set-Cookie"]?.[0];
-          const refresh = rawCookie ? extractTokenFromCookie(rawCookie) : null;
+      const loginPayload = {
+        ...formData,
+        fcmId,
+        deviceId,
+      };
+      mutate(loginPayload, {
+        onSuccess: (response) => {
+          const backendResponse = response.data;
+          if (backendResponse && backendResponse.success) {
+            const access = backendResponse.data.access_token;
 
-          setTokens({
-            access_token: access,
-            refresh_token: refresh,
-          });
+            const rawCookie =
+              response.headers?.["set-cookie"]?.[0] ||
+              response.headers?.["Set-Cookie"]?.[0];
+            const refresh = rawCookie
+              ? extractTokenFromCookie(rawCookie)
+              : null;
 
-          setUser(backendResponse.data.user);
-        }
-      },
-      onError: (error: any) => {
-        const msg =
-          error.response?.data?.message ||
-          "Login Failed: Something went wrong!";
-        setErrorMessage(msg);
-        setErrorVisible(true);
-      },
-    });
+            setTokens({
+              access_token: access,
+              refresh_token: refresh,
+            });
+
+            setUser(backendResponse.data.user);
+          }
+        },
+        onError: (error: any) => {
+          const msg =
+            error.response?.data?.message ||
+            "Login Failed: Something went wrong!";
+          setErrorMessage(msg);
+          setErrorVisible(true);
+        },
+      });
+    } catch (err) {
+      setErrorMessage("Device identification failed. Please try again.");
+      setErrorVisible(true);
+    }
   };
 
   //helper
@@ -104,6 +122,4 @@ const login = () => {
       <Footer />
     </KeyboardAvoidingView>
   );
-};
-
-export default login;
+}

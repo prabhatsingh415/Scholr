@@ -1,5 +1,6 @@
 # Environment Variables
 .env
+serviceAccountKey.json
 
 # Binaries and Connectors
 bin/

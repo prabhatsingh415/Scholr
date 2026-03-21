@@ -73,8 +73,6 @@ public class DataInitializer {
             student.setBatch(batch2026);
             student.setCourseName("B.TECH");
             student.setRollNo("ROLL-123");
-            student.setDeviceId("123@Android");
-            student.setFcmId("FCM@Android");
             student.setDateOfJoining(LocalDate.now());
             student.setExpectedDateOfGraduation(LocalDate.now().plusYears(4));
             student.setVerified(true);
