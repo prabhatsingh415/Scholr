@@ -6,9 +6,13 @@ export interface AuthDetails {
 export interface AuthCredentials {
   collegeId: string;
   password: string;
+  fcmId?: string | null;
+  deviceId?: string | null;
 }
 
 export interface AuthVerfication {
   collegeId: string;
   otp: string;
+  fcmId?: string | null;
+  deviceId?: string | null;
 }
