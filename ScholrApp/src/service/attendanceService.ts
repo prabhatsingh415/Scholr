@@ -18,3 +18,8 @@ export const markAttendance = async (request: StudentAttendance) => {
 
   return response.data;
 };
+
+export const getTodayAttendance = async () => {
+  const response = await apiClient.get("/attendance/student/today");
+  return response.data;
+};

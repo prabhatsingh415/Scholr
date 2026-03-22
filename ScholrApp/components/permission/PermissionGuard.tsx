@@ -13,6 +13,8 @@ import {
   requestPermission,
 } from "@react-native-firebase/messaging";
 
+import * as Notifications from "expo-notifications";
+
 export const PermissionGuard = ({
   children,
 }: {
@@ -34,11 +36,19 @@ export const PermissionGuard = ({
       // Check & Request Location Permission (Required for Attendance)
       const loc = await Location.requestForegroundPermissionsAsync();
 
+      const { status: navStatus } =
+        await Notifications.requestPermissionsAsync();
+
       // Request Notification Permission
       const messaging = getMessaging();
       const authStatus = await requestPermission(messaging);
 
-      if (cam?.granted && loc.status === "granted" && authStatus >= 1) {
+      if (
+        cam?.granted &&
+        loc.status === "granted" &&
+        navStatus === "granted" &&
+        authStatus >= 1
+      ) {
         setStatus("granted");
       } else {
         setStatus("denied");
