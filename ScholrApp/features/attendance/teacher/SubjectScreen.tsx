@@ -1,4 +1,11 @@
-import { View, Text, FlatList, TouchableOpacity, Linking } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Linking,
+  ActivityIndicator,
+} from "react-native";
 import React, { useState } from "react";
 import useFetchSubjects from "@/src/hooks/teacher/useFetchSubjects";
 import useGenerateQR from "@/src/hooks/attendance/useGenerateQR";
@@ -6,11 +13,18 @@ import useAttendanceSessionStore from "@/src/store/attendanceSessionStore";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { ErrorCard } from "@/components/ui/ErrorCard";
+import {
+  BookOpen,
+  MapPin,
+  PlayCircle,
+  GraduationCap,
+} from "lucide-react-native";
+import Loader from "@/components/ui/Loader";
 
 const SubjectScreen = () => {
   const queryClient = useQueryClient();
   const setSession = useAttendanceSessionStore((state) => state.setSession);
-  const { data: subjects } = useFetchSubjects();
+  const { data: subjects, isLoading } = useFetchSubjects();
   const { mutate, isPending: generating } = useGenerateQR();
 
   const [showError, setShowError] = useState(false);
@@ -23,22 +37,13 @@ const SubjectScreen = () => {
 
   const handleGeneration = async (subject: any) => {
     try {
-      let { status, canAskAgain } =
-        await Location.getForegroundPermissionsAsync();
-
+      let { status } = await Location.getForegroundPermissionsAsync();
       if (status !== "granted") {
-        if (canAskAgain) {
-          const { status: newStatus } =
-            await Location.requestForegroundPermissionsAsync();
-          if (newStatus !== "granted") {
-            triggerError(
-              "Location access denied! Location is required for Attendance."
-            );
-            return;
-          }
-        } else {
+        const { status: newStatus } =
+          await Location.requestForegroundPermissionsAsync();
+        if (newStatus !== "granted") {
           triggerError(
-            "Location permission is denied ! click below to mannually change the permission."
+            "Location is required to verify classroom presence. Please enable it in Settings."
           );
           return;
         }
@@ -50,7 +55,7 @@ const SubjectScreen = () => {
           accuracy: Location.Accuracy.Balanced,
         });
       } catch (e) {
-        triggerError("Unable to get your location ! check your GPS settings");
+        triggerError("Unable to get GPS signal. Make sure location is ON.");
         return;
       }
 
@@ -66,10 +71,9 @@ const SubjectScreen = () => {
           onSuccess: (response) => {
             if (response?.data) {
               setSession(response.data.qrCodeBase64, response.data.session);
-              console.log("session ", response.data.session);
               queryClient.invalidateQueries({ queryKey: ["activeSession"] });
             } else {
-              triggerError("Something went wrong ! please try again later...");
+              triggerError("Server failed to generate session. Try again.");
             }
           },
           onError: (error: any) => {
@@ -81,37 +85,82 @@ const SubjectScreen = () => {
         }
       );
     } catch (error) {
-      triggerError("Something went wrong ! please try again later...");
+      triggerError("Something went wrong! please try again later...");
     }
   };
 
   const SubBlock = ({ item }: any) => (
-    <View className="p-4 border-b border-gray-200">
-      <Text className="text-text-primary text-lg font-bold">
+    <View className="bg-[#121212] p-6 rounded-[32px] mb-4 border border-white/5 shadow-2xl">
+      <View className="flex-row justify-between items-start mb-4">
+        <View className="bg-brand/10 p-3 rounded-2xl">
+          <BookOpen size={24} color="#6366f1" />
+        </View>
+        <View className="bg-white/5 px-3 py-1 rounded-full">
+          <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">
+            Sem {item.semester || "N/A"}
+          </Text>
+        </View>
+      </View>
+
+      <Text className="text-white text-2xl font-bold tracking-tight mb-1">
         {item.subjectName}
       </Text>
-      <Text className="text-text-secondary">Semester: {item.department}</Text>
+      <View className="flex-row items-center mb-6">
+        <GraduationCap size={14} color="#9CA3AF" />
+        <Text className="text-gray-400 text-sm ml-2">
+          {item.department || "General"}
+        </Text>
+      </View>
+
       <TouchableOpacity
         disabled={generating}
         onPress={() => handleGeneration(item)}
-        className={`p-2 mt-2 rounded ${generating ? "bg-gray-400" : "bg-blue-500"}`}
+        activeOpacity={0.8}
+        className={`flex-row items-center justify-center py-4 rounded-2xl ${
+          generating ? "bg-gray-800" : "bg-brand"
+        }`}
       >
-        <Text className="text-white text-center">
-          {generating ? "Generating..." : "Start Class"}
-        </Text>
+        {generating ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <>
+            <PlayCircle size={20} color="white" className="mr-2" />
+            <Text className="text-white font-extrabold text-lg ml-2">
+              Start Class
+            </Text>
+          </>
+        )}
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View className="flex-1 bg-background-primary">
-      <Text className="text-3xl text-text-primary p-4">Subjects</Text>
+    <View className="flex-1 bg-[#0A0A0A]">
+      {generating && <Loader>Creating Secure Session...</Loader>}
+
+      <View className="px-6 py-8">
+        <Text className="text-gray-500 text-sm font-medium">
+          Your Dashboard
+        </Text>
+        <Text className="text-white text-4xl font-black tracking-tighter">
+          My <Text className="text-brand">Subjects</Text>
+        </Text>
+      </View>
+
       <FlatList
         data={subjects?.data}
         renderItem={({ item }) => <SubBlock item={item} />}
-        keyExtractor={(item) => item.subjectName}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <Text className="p-4 text-text-secondary">No subjects found.</Text>
+          !isLoading ? (
+            <View className="items-center justify-center mt-20">
+              <Text className="text-gray-500 text-lg">
+                No subjects assigned yet.
+              </Text>
+            </View>
+          ) : null
         }
       />
 
@@ -120,9 +169,7 @@ const SubjectScreen = () => {
         message={errorMessage}
         onClose={() => {
           setShowError(false);
-          if (errorMessage.includes("Settings")) {
-            Linking.openSettings();
-          }
+          if (errorMessage.includes("Settings")) Linking.openSettings();
         }}
       />
     </View>

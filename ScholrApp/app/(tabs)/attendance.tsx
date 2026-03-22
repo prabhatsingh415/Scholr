@@ -7,18 +7,18 @@ import { Role } from "@/types/user";
 import Skeleton from "@/components/ui/Skeleton";
 import SubjectScreen from "@/features/attendance/teacher/SubjectScreen";
 import ScannerScreen from "@/features/attendance/student/ScannerScreen";
+import { View } from "lucide-react-native";
+import Loader from "@/components/ui/Loader";
 const attendance = () => {
   const user = useUserStore((state) => state.user);
   const { data: session, isPending } = useSession();
-
   if (isPending) {
     return (
-      <SafeAreaView className="bg-background-primary flex-1 justify-center items-center">
-        <Skeleton />
+      <SafeAreaView className="w-full h-full bg-[#0A0A0A] flex justify-center px-5">
+        <Loader>Loading...</Loader>
       </SafeAreaView>
     );
   }
-
   const renderContent = () => {
     if (user?.role === Role.TEACHER) {
       return session ? (
