@@ -6,7 +6,7 @@ import { useResendOtp } from "@/src/hooks/auth/useResendOtp";
 import { useVerifyOtp } from "@/src/hooks/auth/useVerifyOtp";
 import useAuthStore from "@/src/store/authStore";
 import useUserStore from "@/src/store/userStore";
-import messaging from "@react-native-firebase/messaging";
+import { getMessaging, getToken } from "@react-native-firebase/messaging";
 import DeviceInfo from "react-native-device-info";
 import React, { useState, useRef, useEffect } from "react";
 import {
@@ -60,9 +60,8 @@ export default function VerifyOTPScreen() {
 
   const handleVerify = async () => {
     try {
-      await messaging().requestPermission();
-
-      const fcmId = await messaging().getToken();
+      const messaging = getMessaging();
+      const fcmId = await getToken(messaging);
       const deviceId = await DeviceInfo.getUniqueId();
 
       mutate(

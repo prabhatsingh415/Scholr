@@ -17,7 +17,7 @@ import useAuthStore from "@/src/store/authStore";
 import Footer from "@/components/ui/Footer";
 import Loader from "@/components/ui/Loader";
 import useUserStore from "@/src/store/userStore";
-import messaging from "@react-native-firebase/messaging";
+import { getMessaging, getToken } from "@react-native-firebase/messaging";
 import DeviceInfo from "react-native-device-info";
 
 export default function login() {
@@ -31,8 +31,8 @@ export default function login() {
 
   const handleLogin = async (formData: any) => {
     try {
-      await messaging().requestPermission();
-      const fcmId = await messaging().getToken();
+      const messaging = getMessaging();
+      const fcmId = await getToken(messaging);
       const deviceId = await DeviceInfo.getUniqueId();
 
       const loginPayload = {
