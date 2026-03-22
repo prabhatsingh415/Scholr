@@ -32,3 +32,10 @@ export interface FetchStudentAttendance {
   semesterId: number | null;
   deptId: number | null;
 }
+
+export interface StudentAttendance {
+  studentLat: number | null;
+  studentLng: number | null;
+  token: string | null;
+  deviceId: string | null;
+}

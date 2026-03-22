@@ -1,4 +1,4 @@
-import { StartAttendanceRequest } from "@/types/attendance";
+import { StartAttendanceRequest, StudentAttendance } from "@/types/attendance";
 import apiClient from "../api/client";
 
 export const fetchActiveSession = async () => {
@@ -9,6 +9,12 @@ export const fetchActiveSession = async () => {
 
 export const generateQRCode = async (request: StartAttendanceRequest) => {
   const response = await apiClient.post("/attendance/generate", request);
+
+  return response.data;
+};
+
+export const markAttendance = async (request: StudentAttendance) => {
+  const response = await apiClient.post("/attendance/verify", request);
 
   return response.data;
 };
