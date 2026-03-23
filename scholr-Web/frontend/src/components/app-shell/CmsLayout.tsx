@@ -2,9 +2,9 @@ import { Navigate, Outlet } from "react-router-dom";
 import Sidebar from "@/components/app-shell/Sidebar";
 import Topbar from "@/components/app-shell/Topbar";
 import CmsFooter from "@/components/app-shell/CmsFooter";
-import { auth } from "@/lib/local-storage";
+import { useAuthStore } from "@/stores/use-auth-store";
 const CmsLayout = () => {
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     if (!user) {
         return <Navigate to="/login" replace/>;
     }

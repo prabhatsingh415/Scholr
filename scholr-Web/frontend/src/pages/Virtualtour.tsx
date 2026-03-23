@@ -25,7 +25,7 @@ const tourLocations: TourLocation[] = [
         name: "GECB Tour",
         description: "Explore our state-of-the-art library with over 500,000 books and digital resources",
         image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1200&h=800&fit=crop",
-        video: "lv_0_20250705230659 (2).mp4",
+        video: "/videos/lv_0_20250705230659 (2).mp4",
         category: "academic",
         hotspots: [
             { x: 25, y: 60, title: "Reading Area", description: "Quiet study spaces for focused learning" }

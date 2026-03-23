@@ -5,15 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { auth, db } from "@/lib/local-storage";
+import { db } from "@/lib/local-storage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import ConfirmDelete from "@/components/common/confirm-delete";
 import StudentForm from "@/components/students/student-form";
+import { useAuthStore } from "@/stores/use-auth-store";
 export default function StudentsPage() {
     const students = db.students.getAll();
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     const canManageStudents = user?.role === "admin";
     const yearOptions = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
     const branchOptions = ["CSE", "IT", "ECE", "EE", "ME", "CE"];

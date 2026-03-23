@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { auth, db } from "@/lib/local-storage";
+import { db } from "@/lib/local-storage";
 import { toast } from "@/hooks/use-toast";
 import { Calendar, Users, TrendingUp } from "lucide-react";
+import { useAuthStore } from "@/stores/use-auth-store";
 export default function AttendancePage() {
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     const canManage = user?.role !== "student";
     const [classes, setClasses] = useState<any[]>([]);
     const [students, setStudents] = useState<any[]>([]);

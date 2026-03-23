@@ -2,25 +2,48 @@
 import { useState } from "react";
 import { Users, GraduationCap, School } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth } from "@/lib/local-storage";
+import { useAuthStore } from "@/stores/use-auth-store";
 import CmsFooter from "@/components/app-shell/CmsFooter";
 type Role = "admin" | "faculty" | "student";
 export default function LoginPage() {
     const [selectedRole, setSelectedRole] = useState<Role>("faculty");
     const [collegeId, setCollegeId] = useState("");
     const [password, setPassword] = useState("");
+    const [formError, setFormError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const handleSignIn = async (e: React.FormEvent) => {
+    const quickLogin = useAuthStore((state) => state.quickLogin);
+    const validatePassword = (value: string) => {
+        if (!/^[A-Z]/.test(value)) {
+            return "Password must start with a capital letter.";
+        }
+        if (!/\d/.test(value)) {
+            return "Password must include at least one number.";
+        }
+        if (!/[^A-Za-z0-9]/.test(value)) {
+            return "Password must include at least one special character.";
+        }
+        return null;
+    };
+    const handleSignIn = (e: React.FormEvent) => {
         e.preventDefault();
+        setFormError(null);
+        const trimmedCollegeId = collegeId.trim();
+        if (!trimmedCollegeId) {
+            setFormError("College ID is required.");
+            return;
+        }
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            setFormError(passwordError);
+            return;
+        }
         const roleForDb = selectedRole === "faculty" ? "teacher" : selectedRole;
-        const { user, error } = await auth.signIn(collegeId, password, roleForDb);
-        if (user) {
-            console.log("Logged in successfully:", user);
+        const offlineLogin = quickLogin(roleForDb, trimmedCollegeId);
+        if (offlineLogin.user) {
             navigate("/dashboard");
+            return;
         }
-        else {
-            alert(error || "Login failed. Please check your credentials.");
-        }
+        setFormError("Login failed. Please check your credentials.");
     };
     return (<div className="min-h-screen bg-[#959DAA]">
       <div className="min-h-screen p-4 sm:p-6">
@@ -58,8 +81,10 @@ export default function LoginPage() {
               </div>
 
               <form onSubmit={handleSignIn} className="space-y-4">
-                <input type="text" value={collegeId} onChange={(e) => setCollegeId(e.target.value)} placeholder="College ID (e.g. ST-2026-01)" className="w-full rounded-full border border-slate-300 bg-white/85 px-5 py-3 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-4 focus:ring-[#112F68]/15" required/>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (min 6 chars)" className="w-full rounded-full border border-slate-300 bg-white/85 px-5 py-3 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-4 focus:ring-[#112F68]/15" required minLength={6}/>
+                <input type="text" value={collegeId} onChange={(e) => setCollegeId(e.target.value)} placeholder="College ID (e.g. 22EBRCS004)" className="w-full rounded-full border border-slate-300 bg-white/85 px-5 py-3 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-4 focus:ring-[#112F68]/15" required autoComplete="username"/>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (First letter capital + 1 number + 1 special)" className="w-full rounded-full border border-slate-300 bg-white/85 px-5 py-3 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-4 focus:ring-[#112F68]/15" required autoComplete="current-password"/>
+                <p className="text-xs text-slate-500">Password must start with a capital letter and include one number and one special character.</p>
+                {formError ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</div> : null}
                 <button type="submit" className="w-full rounded-full bg-[#F5D45A] py-3 text-lg font-semibold text-slate-900 transition-colors hover:bg-[#efca43]">
                   Sign In
                 </button>

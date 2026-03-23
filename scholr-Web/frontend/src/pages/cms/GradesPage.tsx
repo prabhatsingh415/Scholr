@@ -5,14 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { auth, db } from "@/lib/local-storage";
+import { db } from "@/lib/local-storage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2 } from "lucide-react";
 import ConfirmDelete from "@/components/common/confirm-delete";
 import GradeForm from "@/components/grades/grade-form";
+import { useAuthStore } from "@/stores/use-auth-store";
 export default function GradesPage() {
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     const canManage = user?.role !== "student";
     const [rows, setRows] = useState(() => db.grades.getAll());
     const students = db.students.getAll();

@@ -288,7 +288,7 @@ const TestimonialsSection = () => {
 
             
             <div className="flex flex-col md:flex-row items-center justify-center space-y-6 md:space-y-0 md:space-x-8">
-              <img src={currentTestimonial.image} alt={currentTestimonial.name} className="w-[200px] h-[300px]  rounded-full object-cover border-4 border-yellow-300 shadow-xl transition-all duration-500"/>
+              <img src={`/images/${currentTestimonial.image}`} alt={currentTestimonial.name} className="w-[200px] h-[300px]  rounded-full object-cover border-4 border-yellow-300 shadow-xl transition-all duration-500"/>
               <div className="text-center md:text-left">
                 <div className="font-bold text-2xl mb-1">{currentTestimonial.name}</div>
                 <div className="text-primary-foreground/90 text-lg mb-2">{currentTestimonial.role}</div>

@@ -1,19 +1,12 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Users, GraduationCap, School, BookOpen, TrendingUp, Calendar, ClipboardList, Bell, Download } from "lucide-react";
-import { db, auth, User, Notice } from "@/lib/local-storage";
+import { db, Notice } from "@/lib/local-storage";
+import { useAuthStore } from "@/stores/use-auth-store";
 export default function DashboardPage() {
-    const [user, setUser] = useState<User | null>(null);
-    const [isMounted, setIsMounted] = useState(false);
-    useEffect(() => {
-        setUser(auth.getUser());
-        setIsMounted(true);
-    }, []);
-    if (!isMounted) {
-        return <div className="flex h-[50vh] items-center justify-center text-gray-500">Loading dashboard...</div>;
-    }
+    const user = useAuthStore((state) => state.user);
     if (user?.role === "admin")
         return <AdminDashboard />;
     if (user?.role === "teacher")

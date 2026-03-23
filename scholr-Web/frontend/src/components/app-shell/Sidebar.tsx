@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Bell, Users, GraduationCap, School, BookOpen, ClipboardCheck, BarChart3, Calendar, CreditCard, Settings, } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { auth } from "@/lib/local-storage";
+import { useAuthStore } from "@/stores/use-auth-store";
 const items = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "teacher", "student"] },
     { href: "/notices", label: "Notices", icon: Bell, roles: ["admin"] },
@@ -18,7 +18,7 @@ const items = [
 ];
 const Sidebar = () => {
     const location = useLocation();
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     const visibleItems = items.filter((item) => item.roles.includes(user?.role || "student"));
     return (<div className="cms-sidebar w-64 border-r border-[#D8D5C6] min-h-screen bg-gradient-to-b from-[#F4F0DE] to-white shadow-sm">
       <div className="p-6 border-b border-[#DEDACC]">

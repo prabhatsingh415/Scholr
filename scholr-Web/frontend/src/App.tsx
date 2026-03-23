@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import CmsLayout from "@/components/app-shell/CmsLayout";
-import { auth } from "@/lib/local-storage";
+import { useAuthStore } from "@/stores/use-auth-store";
 import Index from "./pages/Index";
 import ApplyNow from "./pages/ApplyNow";
 import Contact from "./pages/Contact";
@@ -31,13 +31,12 @@ import GradesPage from "./pages/cms/GradesPage";
 import TimetablePage from "./pages/cms/TimetablePage";
 import FeesPage from "./pages/cms/FeesPage";
 import SettingsPage from "./pages/cms/SettingsPage";
-import ApiTestPage from "./pages/ApiTestPage";
 const queryClient = new QueryClient();
 const RoleProtectedRoute = ({ allowedRoles, children }: {
     allowedRoles: Array<"admin" | "teacher" | "student">;
     children: JSX.Element;
 }) => {
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     if (!user)
         return <Navigate to="/login" replace/>;
     if (!allowedRoles.includes(user.role))
@@ -52,7 +51,6 @@ const App = () => (<QueryClientProvider client={queryClient}>
         <Routes>
           <Route path="/" element={<Index />}/>
           <Route path="/login" element={<LoginPage />}/>
-          <Route path="/api-test" element={<ApiTestPage />}/>
           <Route element={<CmsLayout />}>
             <Route path="/dashboard" element={<DashboardPage />}/>
             <Route path="/notices" element={<RoleProtectedRoute allowedRoles={["admin"]}>

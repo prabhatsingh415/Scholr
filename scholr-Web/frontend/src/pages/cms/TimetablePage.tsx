@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { auth, getClasses, getSubjects, getTeachers } from "@/lib/local-storage";
+import { getClasses, getSubjects, getTeachers } from "@/lib/local-storage";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Clock, Edit, Trash2 } from "lucide-react";
+import { useAuthStore } from "@/stores/use-auth-store";
 interface TimetableEntry {
     id: string;
     class_id: string;
@@ -23,7 +24,7 @@ interface TimetableEntry {
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const TIME_SLOTS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
 export default function TimetablePage() {
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     const canManage = user?.role !== "student";
     const [selectedClass, setSelectedClass] = useState<string>("");
     const [open, setOpen] = useState(false);

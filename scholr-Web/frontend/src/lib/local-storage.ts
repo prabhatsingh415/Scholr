@@ -152,11 +152,20 @@ export const auth = {
             return { user, error: null };
         }
         catch (error) {
-            const message = extractStringByKeys((error as { response?: { data?: unknown } }).response?.data, [
+            const response = (error as { response?: { data?: unknown; status?: number } }).response;
+            const status = response?.status;
+            const apiMessage = extractStringByKeys(response?.data, [
                 "message",
                 "error",
                 "detail",
-            ]) ?? "Login failed. Please check your College ID and password.";
+            ]);
+            let message = apiMessage ?? "Login failed. Please check your College ID and password.";
+            if (!response) {
+                message = "Cannot reach API server. Check VITE_SCHOLR_API_TARGET and backend status.";
+            }
+            else if (status === 404) {
+                message = "Login API route not found. Check VITE_SCHOLR_API_URL and backend base path.";
+            }
             scholrTokenStorage.clear();
             localStorage.removeItem(AUTH_USER_KEY);
             return { user: null, error: message };
@@ -228,14 +237,19 @@ export const auth = {
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
         return user;
     },
-    quickLogin: (role: "admin" | "teacher" | "student") => {
+    quickLogin: (role: "admin" | "teacher" | "student", collegeId?: string) => {
         const roleEmail = role === "admin" ? "admin@school.com" : role === "teacher" ? "teacher@school.com" : "student@school.com";
         const name = role === "admin" ? "Administrator" : role === "teacher" ? "Teacher User" : "Student User";
+        const normalizedCollegeId = collegeId?.trim();
+        const id = normalizedCollegeId && normalizedCollegeId.length > 0 ? normalizedCollegeId : `${role}-${Date.now()}`;
+        const email = normalizedCollegeId && normalizedCollegeId.length > 0
+            ? `${normalizedCollegeId.toLowerCase()}@college.local`
+            : roleEmail;
         const user: User = {
-            id: `${role}-${Date.now()}`,
-            email: roleEmail,
+            id,
+            email,
             role,
-            name,
+            name: normalizedCollegeId && normalizedCollegeId.length > 0 ? normalizedCollegeId : name,
             created_at: new Date().toISOString(),
         };
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
