@@ -2,7 +2,7 @@ name: java_backend
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "feature/webapp" ]
   pull_request:
     branches: [ "main" ]
 
@@ -22,6 +22,5 @@ jobs:
         cache: maven
 
     - name: Build with Maven
-      # -DskipTests skips both compilation and execution of tests
-      # -Dmaven.test.skip=true is used here to ensure no test-related tasks run
-      run: mvn -B package -DskipTests --file pom.xml
+      # Change 'backend' to your actual backend folder name
+      run: mvn -B package -DskipTests --file JavaService/pom.xml
