@@ -3,6 +3,7 @@ package com.scholr.scholr.service;
 import com.scholr.scholr.dto.QRResponse;
 import com.scholr.scholr.dto.StartAttendanceRequest;
 import com.scholr.scholr.dto.StudentAttendanceRequest;
+import com.scholr.scholr.dto.StudentTodayAttendanceResponse;
 import com.scholr.scholr.entity.*;
 import com.scholr.scholr.enums.AttendanceMode;
 import com.scholr.scholr.enums.AttendanceStatus;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -214,5 +216,10 @@ public class AttendanceServiceImpl implements AttendanceService{
         }
         attendance.setMode(AttendanceMode.MANUAL);
         repository.save(attendance);
+    }
+
+    @Override
+    public List<StudentTodayAttendanceResponse> getStudentTodayHistory(String collegeId) {
+        return repository.findTodayAttendanceByStudent(collegeId);
     }
 }
