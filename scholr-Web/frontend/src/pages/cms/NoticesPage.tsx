@@ -7,10 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { db, type Notice } from "@/lib/local-storage";
+import { type Notice } from "@/lib/local-storage";
+import { downloadNoticeAttachment, openNoticeAttachment } from "@/lib/notice-attachments";
 import { toast } from "@/hooks/use-toast";
 import { Download, Plus, Pencil, Trash2 } from "lucide-react";
 import ConfirmDelete from "@/components/common/confirm-delete";
+import { useCmsStore } from "@/stores/use-cms-store";
+import { useAuthStore } from "@/stores/use-auth-store";
 type Audience = "teacher" | "student" | "all";
 const AUDIENCE_LABELS: Record<Audience, string> = {
     teacher: "Faculty",
@@ -18,7 +21,12 @@ const AUDIENCE_LABELS: Record<Audience, string> = {
     all: "All",
 };
 export default function NoticesPage() {
-    const [notices, setNotices] = useState<Notice[]>(() => db.notices.getAll());
+    const user = useAuthStore((state) => state.user);
+    const canManage = user?.role !== "student";
+    const notices = useCmsStore((state) => state.notices);
+    const createNotice = useCmsStore((state) => state.createNotice);
+    const updateNotice = useCmsStore((state) => state.updateNotice);
+    const deleteNotice = useCmsStore((state) => state.deleteNotice);
     const [open, setOpen] = useState(false);
     const [edit, setEdit] = useState<Notice | null>(null);
     const [selectedFileName, setSelectedFileName] = useState("");
@@ -32,6 +40,7 @@ export default function NoticesPage() {
     });
     const sorted = useMemo(() => [...notices].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()), [notices]);
     const openCreate = () => {
+        if (!canManage) return;
         setEdit(null);
         setSelectedFileName("");
         setForm({
@@ -45,6 +54,7 @@ export default function NoticesPage() {
         setOpen(true);
     };
     const openEdit = (notice: Notice) => {
+        if (!canManage) return;
         setEdit(notice);
         setForm({
             title: notice.title,
@@ -58,6 +68,7 @@ export default function NoticesPage() {
         setOpen(true);
     };
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!canManage) return;
         const file = event.target.files?.[0];
         if (!file)
             return;
@@ -93,73 +104,39 @@ export default function NoticesPage() {
         setSelectedFileName("");
     };
     const saveNotice = () => {
+        if (!canManage) return;
         if (!form.title.trim() || !form.message.trim()) {
             toast({ title: "Missing fields", description: "Title and message are required.", variant: "destructive" });
             return;
         }
         if (edit) {
-            const updated = db.notices.update(edit.id, form);
+            const updated = updateNotice(edit.id, form);
             if (updated) {
-                setNotices((prev) => prev.map((n) => (n.id === edit.id ? updated : n)));
                 toast({ title: "Updated", description: "Notice updated successfully." });
             }
         }
         else {
-            const created = db.notices.insert(form);
-            setNotices((prev) => [created, ...prev]);
+            createNotice(form);
             toast({ title: "Created", description: "Notice published successfully." });
         }
         setOpen(false);
     };
-    const dataUrlToBlob = (dataUrl: string): Blob => {
-        const parts = dataUrl.split(",");
-        if (parts.length !== 2)
-            throw new Error("Invalid data URL");
-        const mimeMatch = parts[0].match(/data:(.*?);base64/);
-        const mime = mimeMatch?.[1] || "application/octet-stream";
-        const binary = atob(parts[1]);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++)
-            bytes[i] = binary.charCodeAt(i);
-        return new Blob([bytes], { type: mime });
-    };
     const openAttachment = (notice: Notice) => {
-        if (!notice.file_data_url)
-            return;
-        try {
-            const blob = dataUrlToBlob(notice.file_data_url);
-            const url = URL.createObjectURL(blob);
-            window.open(url, "_blank", "noopener,noreferrer");
-            setTimeout(() => URL.revokeObjectURL(url), 60000);
-        }
-        catch {
+        if (!openNoticeAttachment(notice)) {
             toast({ title: "Open failed", description: "Could not open this file.", variant: "destructive" });
         }
     };
     const downloadAttachment = (notice: Notice) => {
-        if (!notice.file_data_url)
-            return;
-        try {
-            const blob = dataUrlToBlob(notice.file_data_url);
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = notice.file_name || "notice-file";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-        catch {
+        if (!downloadNoticeAttachment(notice)) {
             toast({ title: "Download failed", description: "Could not download this file.", variant: "destructive" });
         }
     };
     return (<div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl md:text-3xl font-semibold">Notices</h1>
-        <Button className="bg-teal-600 hover:bg-teal-700 text-white" onClick={openCreate}>
+        {canManage && (<Button className="bg-teal-600 hover:bg-teal-700 text-white" onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2"/> Add Notice
-        </Button>
+        </Button>)}
       </div>
 
       <Card>
@@ -188,27 +165,26 @@ export default function NoticesPage() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                {canManage && (<div className="flex items-center gap-2">
                   <Button variant="outline" size="icon" onClick={() => openEdit(n)}>
                     <Pencil className="h-4 w-4"/>
                   </Button>
                   <ConfirmDelete title="Delete notice" description="This notice will be removed permanently." onConfirm={() => {
-                db.notices.delete(n.id);
-                setNotices((prev) => prev.filter((x) => x.id !== n.id));
+                deleteNotice(n.id);
                 toast({ title: "Deleted", description: "Notice removed successfully." });
             }}>
                     <Button variant="destructive" size="icon">
                       <Trash2 className="h-4 w-4"/>
                     </Button>
                   </ConfirmDelete>
-                </div>
+                </div>)}
               </div>
             </div>))}
           {sorted.length === 0 && (<div className="text-center text-sm text-muted-foreground py-6">No notices available.</div>)}
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      {canManage && (<Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{edit ? "Edit Notice" : "Add Notice"}</DialogTitle>
@@ -255,6 +231,6 @@ export default function NoticesPage() {
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog>)}
     </div>);
 }

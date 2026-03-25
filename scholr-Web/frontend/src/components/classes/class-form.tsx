@@ -7,19 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { db, type Class } from "@/lib/local-storage";
+
+const SEMESTER_OPTIONS_BY_YEAR: Record<string, string[]> = {
+    "1st Year": ["1st Semester", "2nd Semester"],
+    "2nd Year": ["3rd Semester", "4th Semester"],
+    "3rd Year": ["5th Semester", "6th Semester"],
+    "4th Year": ["7th Semester", "8th Semester"],
+};
+
+const YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+
 interface ClassFormProps {
     initial?: Class;
     onSubmit: (values: Omit<Class, "id" | "created_at" | "updated_at">) => void;
     onCancel: () => void;
 }
 export default function ClassForm({ initial, onSubmit, onCancel }: ClassFormProps) {
-    const semesterOptionsByYear: Record<string, string[]> = {
-        "1st Year": ["1st Semester", "2nd Semester"],
-        "2nd Year": ["3rd Semester", "4th Semester"],
-        "3rd Year": ["5th Semester", "6th Semester"],
-        "4th Year": ["7th Semester", "8th Semester"],
-    };
-    const yearOptions = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
     const [form, setForm] = useState({
         name: "",
         teacher_id: "",
@@ -50,7 +53,7 @@ export default function ClassForm({ initial, onSubmit, onCancel }: ClassFormProp
         }
     }, [initial]);
     useEffect(() => {
-        const allowedSemesters = semesterOptionsByYear[form.room_number] || [];
+        const allowedSemesters = SEMESTER_OPTIONS_BY_YEAR[form.room_number] || [];
         if (form.name && !allowedSemesters.includes(form.name)) {
             setForm((prev) => ({ ...prev, name: "" }));
         }
@@ -84,7 +87,7 @@ export default function ClassForm({ initial, onSubmit, onCancel }: ClassFormProp
               <SelectValue placeholder="Select Year"/>
             </SelectTrigger>
             <SelectContent>
-              {yearOptions.map((year) => (<SelectItem key={year} value={year}>
+              {YEAR_OPTIONS.map((year) => (<SelectItem key={year} value={year}>
                   {year}
                 </SelectItem>))}
             </SelectContent>
@@ -111,7 +114,7 @@ export default function ClassForm({ initial, onSubmit, onCancel }: ClassFormProp
               <SelectValue placeholder="Select Semester"/>
             </SelectTrigger>
             <SelectContent>
-              {(semesterOptionsByYear[form.room_number] || []).map((semester) => (<SelectItem key={semester} value={semester}>
+              {(SEMESTER_OPTIONS_BY_YEAR[form.room_number] || []).map((semester) => (<SelectItem key={semester} value={semester}>
                   {semester}
                 </SelectItem>))}
             </SelectContent>

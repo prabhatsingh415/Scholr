@@ -2,21 +2,35 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Users, GraduationCap, School } from "lucide-react";
 import { cmsAuth } from "@/lib/cms-auth";
+import { useLogin } from "@/hooks/auth/useLogin";
 type Role = "admin" | "faculty" | "student";
 const Login = () => {
     const [selectedRole, setSelectedRole] = useState<Role>("faculty");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
+    const { mutate: login, isPending, error, isError } = useLogin();
     const handleSignIn = async (e: React.FormEvent) => {
+      console.log("aa gayi ............")
         e.preventDefault();
-        const roleForStore = selectedRole === "faculty" ? "teacher" : selectedRole;
-        const { user, error } = await cmsAuth.signIn(email, password, roleForStore);
-        if (user) {
-            navigate("/dashboard");
-            return;
+        try{ console.log("Login attempt with:", { email, password }),
+            login({ email, password } as any, {
+             
+                onSuccess: (data) => {
+                    // Handle successful login, e.g., store tokens, update auth state
+                    console.log("Login successful:", data);
+                    navigate("/dashboard"); // Redirect to dashboard or appropriate page
+                },
+                onError: (err) => {
+                    // Handle login error, e.g., show error message
+                    console.error("Login failed:", err);
+                },
+            });
+            
+        }catch(err){
+            console.log(err);
         }
-        alert(error || "Login failed. Please check your credentials.");
+      
     };
     return (<div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
@@ -25,7 +39,7 @@ const Login = () => {
             <div className="w-6 h-6 bg-white/30 rounded-full backdrop-blur-sm"></div>
           </div>
           <h1 className="text-3xl font-bold text-slate-800 tracking-tight">GCEC</h1>
-          <p className="text-slate-600 mt-1">College Management System</p>
+          <p className="text-slate-600 mt-1">College  System</p>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-8">

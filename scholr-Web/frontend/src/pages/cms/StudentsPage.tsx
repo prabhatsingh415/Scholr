@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,12 +23,26 @@ export default function StudentsPage() {
     const [branchFilter, setBranchFilter] = useState("all");
     const [open, setOpen] = useState(false);
     const [edit, setEdit] = useState<any | null>(null);
+
+    const loadStudents = async () => {
+        try {
+            const res = await api.admin.getUsers("STUDENT");
+            setStudents(res.data || []);
+        } catch (error) {
+            console.error("Failed to load students", error);
+        }
+    };
+
+    useEffect(() => {
+        loadStudents();
+    }, []);
+
     const filtered = useMemo(() => {
         return students.filter((s) => {
-            const v = `${s.first_name} ${s.last_name} ${s.email || ""} ${s.parent_contact || ""} ${s.year || ""} ${s.branch || ""}`.toLowerCase();
+            const v = `${s.firstName || s.first_name} ${s.lastName || s.last_name} ${s.email || ""} ${s.phoneNo || s.parent_contact || ""} ${s.year || ""} ${s.courseName || s.branch || ""}`.toLowerCase();
             const matchesSearch = v.includes(q.toLowerCase());
             const matchesYear = yearFilter === "all" || (s.year || "") === yearFilter;
-            const matchesBranch = branchFilter === "all" || (s.branch || "") === branchFilter;
+            const matchesBranch = branchFilter === "all" || (s.courseName || s.branch || "") === branchFilter;
             return matchesSearch && matchesYear && matchesBranch;
         });
     }, [students, q, yearFilter, branchFilter]);
@@ -89,13 +103,13 @@ export default function StudentsPage() {
               <TableBody>
                 {filtered.map((s) => (<TableRow key={s.id}>
                     <TableCell>
-                      {s.first_name} {s.last_name}
+                      {s.firstName || s.first_name} {s.lastName || s.last_name}
                     </TableCell>
                     <TableCell>{s.email || "-"}</TableCell>
                     <TableCell>{s.date_of_birth ? new Date(s.date_of_birth).toLocaleDateString() : "-"}</TableCell>
                     <TableCell>{s.year || "-"}</TableCell>
-                    <TableCell>{s.branch || "-"}</TableCell>
-                    <TableCell>{s.parent_contact || "-"}</TableCell>
+                    <TableCell>{s.courseName || s.branch || "-"}</TableCell>
+                    <TableCell>{s.phoneNo || s.parent_contact || "-"}</TableCell>
                     {canManageStudents && (<TableCell className="text-right">
                         <div className="flex items-center gap-2 justify-end">
                           <Button variant="outline" size="icon" onClick={() => {
@@ -131,18 +145,35 @@ export default function StudentsPage() {
             <DialogHeader>
               <DialogTitle>{edit ? "Edit Student" : "Add Student"}</DialogTitle>
             </DialogHeader>
-            <StudentForm initial={edit ?? undefined} onCancel={() => setOpen(false)} onSubmit={(values) => {
-                if (edit) {
-                    const res = db.students.update(edit.id, values);
-                    if (res) {
+            <StudentForm initial={edit ?? undefined} onCancel={() => setOpen(false)} onSubmit={async (values) => {
+                try {
+                    if (edit) {
+                        db.students.update(edit.id, values);
                         toast({ title: "Updated", description: "Student updated successfully." });
+                        loadStudents();
                     }
+                    else {
+                        await api.admin.addStudent({
+                            collegeId: values.college_id || `ST-${Math.floor(Math.random() * 1000)}`,
+                            firstName: values.first_name,
+                            lastName: values.last_name,
+                            email: values.email,
+                            phoneNo: values.parent_contact,
+                            deptId: 1,
+                            rollNo: values.roll_no || "ROLL-XX",
+                            courseName: values.branch,
+                            batchId: 1,
+                            semesterId: 1,
+                            joiningDate: new Date().toISOString().split("T")[0],
+                            gradDate: "2028-06-30"
+                        });
+                        toast({ title: "Created", description: "Student added successfully." });
+                        loadStudents();
+                    }
+                    setOpen(false);
+                } catch (error: any) {
+                    toast({ title: "Error", description: error.response?.data?.message || "Failed to save student.", variant: "destructive" });
                 }
-                else {
-                    db.students.insert(values);
-                    toast({ title: "Created", description: "Student added successfully." });
-                }
-                setOpen(false);
             }}/>
           </DialogContent>
         </Dialog>)}

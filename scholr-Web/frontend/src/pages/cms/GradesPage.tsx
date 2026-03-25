@@ -84,10 +84,14 @@ export default function GradesPage() {
                       <TableCell>{t?.full_name || "-"}</TableCell>
                       {canManage && (<TableCell className="text-right">
                           <ConfirmDelete title="Delete exam" description="This will permanently remove the exam record." onConfirm={() => {
-                        const updated = rows.filter((r) => r.id !== g.id);
-                        localStorage.setItem("grades", JSON.stringify(updated));
-                        setRows(updated);
-                        toast({ title: "Deleted", description: "Exam removed successfully." });
+                        const deleted = db.grades.delete(g.id);
+                        if (deleted) {
+                            setRows((prev) => prev.filter((r) => r.id !== g.id));
+                            toast({ title: "Deleted", description: "Exam removed successfully." });
+                        }
+                        else {
+                            toast({ title: "Delete failed", description: "Exam could not be removed.", variant: "destructive" });
+                        }
                     }}>
                             <Button variant="destructive" size="icon">
                               <Trash2 className="h-4 w-4"/>
