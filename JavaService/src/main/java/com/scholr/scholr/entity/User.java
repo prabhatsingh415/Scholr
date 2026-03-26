@@ -4,6 +4,8 @@ import com.scholr.scholr.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 @Data
 @Inheritance(strategy = InheritanceType.JOINED)
+@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE userId=?")
 public abstract class User {
 
     @Id
@@ -47,6 +50,9 @@ public abstract class User {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
     @PrePersist
     protected void onCreate() {
