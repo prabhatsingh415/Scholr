@@ -4,6 +4,8 @@ import com.scholr.scholr.enums.AttendanceMode;
 import com.scholr.scholr.enums.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 

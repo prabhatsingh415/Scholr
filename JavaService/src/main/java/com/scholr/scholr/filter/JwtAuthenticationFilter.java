@@ -1,5 +1,6 @@
 package com.scholr.scholr.filter;
 
+import com.scholr.scholr.entity.User;
 import com.scholr.scholr.service.JwtService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,6 +66,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Validate token
                 if (jwtService.isTokenValid(token, userDetails)) {
+
+                    if (userDetails instanceof User currentUser) {
+                        if (currentUser.isDeleted()) {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403 Forbidden
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"status\":403 ,\"error\":\"Account Deleted\",\"message\":\"Your account has been deactivated or deleted.\"}");
+                            return;
+                        }
+                    }
 
                     // check if user is verified
                     Boolean isVerified = (Boolean) jwtService.extractAllClaims(token, secretKey).get("is_verified");

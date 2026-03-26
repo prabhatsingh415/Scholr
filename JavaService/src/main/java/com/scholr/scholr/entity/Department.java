@@ -1,13 +1,15 @@
 package com.scholr.scholr.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction; // <--- Naya wala import
 
 @Entity
+@Table(name = "departments")
 @Data
+@SQLDelete(sql = "UPDATE departments SET is_deleted = true WHERE id=?")
+@SQLRestriction("is_deleted = false")
 public class Department {
 
     @Id
@@ -16,4 +18,7 @@ public class Department {
 
     private String deptId;
     private String deptName;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 }
