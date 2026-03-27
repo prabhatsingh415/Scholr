@@ -60,3 +60,4 @@ GoogleService-Info.plist
 
 # Firebase Admin SDK (Go Service)
 serviceAccountKey.json
+GoService/serviceAccountKey.json
