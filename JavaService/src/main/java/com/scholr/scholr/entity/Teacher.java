@@ -1,9 +1,7 @@
 package com.scholr.scholr.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.List;
 
@@ -11,6 +9,8 @@ import java.util.List;
 @Table(name = "teacher_details")
 @PrimaryKeyJoinColumn(name = "user_id") // Link to User's ID
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class Teacher extends User {

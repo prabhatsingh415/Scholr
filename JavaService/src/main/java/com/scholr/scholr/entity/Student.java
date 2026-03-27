@@ -2,9 +2,7 @@ package com.scholr.scholr.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -12,6 +10,8 @@ import java.time.LocalDate;
 @Table(name = "student_details")
 @PrimaryKeyJoinColumn(name = "user_id") // Link to User's ID
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class Student extends User {

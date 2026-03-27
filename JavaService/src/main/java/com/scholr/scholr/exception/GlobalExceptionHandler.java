@@ -62,7 +62,8 @@ public class GlobalExceptionHandler {
             UserAlreadyExistsException.class,
             InvalidDepartmentIdException.class,
             InvalidSemesterIdException.class,
-            InvalidBatchIdException.class
+            InvalidBatchIdException.class,
+            AccountDeletedException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleBadRequest(Exception ex) {
         logErrorLocation(ex);

@@ -74,18 +74,18 @@ public class AdminUserController {
         ));
     }
 
-    // --- Bulk Delete/Deactivate (Optional but Recommended) ---
-//    @PatchMapping("/users/bulk-deactivate")
-//    public ResponseEntity<?> deactivateUsers(@RequestBody List<Long> userIds) {
-//        adminUserService.deleteUsersBulk(userIds);
-//        return ResponseEntity.ok(new ApiResponse<>(true, "Users deactivated", null, null, LocalDateTime.now().toString()));
-//    }
+    // --- Bulk Delete ---
+    @PatchMapping("/users/bulk-deactivate")
+    public ResponseEntity<?> deactivateUsers(@RequestBody List<String> collegeIds) {
+        adminUserService.deleteUsersBulk(collegeIds);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Users deactivated", null, null, LocalDateTime.now().toString()));
+    }
 
 
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-//        adminUserService.deleteUser(id);
-//        return ResponseEntity.ok(new ApiResponse<>(true, "User deleted from system", null, null, LocalDateTime.now().toString()));
-//    }
+    @DeleteMapping("/users/{collegeId}")
+    public ResponseEntity<?> deleteUser(@PathVariable String collegeId) {
+        adminUserService.deleteUser(collegeId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "User deleted from system", null, null, LocalDateTime.now().toString()));
+    }
 
 }

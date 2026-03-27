@@ -11,20 +11,20 @@ import java.util.List;
 
 public interface AdminUserService {
 
-    @Transactional
     List<User> addStudentsBulk(List<StudentAddRequest> requests);
 
-    @Transactional
     List<User> addTeachersBulk(List<TeacherAddRequest> requests);
 
-//    @Transactional
-//    void deleteUsersBulk(List<Long> ids);
+    void deleteUsersBulk(List<String> collegeIds);
 
     User addStudent(StudentAddRequest request);
 
     User addTeacher(TeacherAddRequest request);
 
     List<UserResponseDTO> getUsersByRole(Role role);
+
+    void deleteUser(String collegeId);
 }
+
 
 

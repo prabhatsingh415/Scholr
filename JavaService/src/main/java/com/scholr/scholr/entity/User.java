@@ -3,17 +3,23 @@ package com.scholr.scholr.entity;
 import com.scholr.scholr.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
-@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE userId=?")
+@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE user_id=?")
+@SQLRestriction("is_deleted = false")
 public abstract class User {
 
     @Id

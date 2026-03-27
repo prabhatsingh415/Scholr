@@ -5,12 +5,10 @@ import com.scholr.scholr.dto.TeacherAddRequest;
 import com.scholr.scholr.dto.UserResponseDTO;
 import com.scholr.scholr.entity.*;
 import com.scholr.scholr.enums.Role;
-import com.scholr.scholr.exception.InvalidBatchIdException;
-import com.scholr.scholr.exception.InvalidDepartmentIdException;
-import com.scholr.scholr.exception.InvalidSemesterIdException;
-import com.scholr.scholr.exception.UserAlreadyExistsException;
+import com.scholr.scholr.exception.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,6 +16,7 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserService userService;
@@ -45,11 +44,13 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .toList();
     }
 
-//    @Transactional
-//    @Override
-//    public void deleteUsersBulk(List<Long> ids) {
-//        ids.forEach(userService::Delete);
-//    }
+
+    @Transactional
+    @Override
+    public void deleteUsersBulk(List<String> collegeIds) {
+        collegeIds.forEach(userService::deleteUserById);
+        log.info("Bulk delete completed for {} users.", collegeIds.size());
+    }
 
 
     @Override
@@ -98,6 +99,18 @@ public class AdminUserServiceImpl implements AdminUserService {
     public List<UserResponseDTO> getUsersByRole(Role role) {
         List<User> users = userService.findAllByRole(role);
         return users.stream().map(this::convertToDTO).toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(String collegeId) {
+
+        User user = userService.findByCollegeId(collegeId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + collegeId));
+
+        userService.delete(user);
+
+        log.info("User with ID {} soft-deleted successfully.", collegeId);
     }
 
     private void validateNewUser(String collegeId) {

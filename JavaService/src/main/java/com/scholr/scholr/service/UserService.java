@@ -31,7 +31,13 @@ public interface UserService {
     List<UserDTO> findByRole(Role role);
 
     List<User> findAllByRole(Role role);
+
+    void delete(User user);
+
+    void deleteUserById(String s);
+
 }
+
 
 
 

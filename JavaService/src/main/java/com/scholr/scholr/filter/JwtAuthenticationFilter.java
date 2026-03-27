@@ -1,11 +1,10 @@
 package com.scholr.scholr.filter;
 
-import com.scholr.scholr.entity.User;
+import com.scholr.scholr.service.CustomUserDetailsService;
 import com.scholr.scholr.service.JwtService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -26,7 +25,7 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     @Value("${JWT_SECRET}")
     private String secretKey;
@@ -67,15 +66,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Validate token
                 if (jwtService.isTokenValid(token, userDetails)) {
 
-                    if (userDetails instanceof User currentUser) {
-                        if (currentUser.isDeleted()) {
-                            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403 Forbidden
-                            response.setContentType("application/json");
-                            response.getWriter().write("{\"status\":403 ,\"error\":\"Account Deleted\",\"message\":\"Your account has been deactivated or deleted.\"}");
-                            return;
-                        }
-                    }
-
                     // check if user is verified
                     Boolean isVerified = (Boolean) jwtService.extractAllClaims(token, secretKey).get("is_verified");
                     if (isVerified == null || !isVerified) {
@@ -107,6 +97,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"success\":false, \"message\":\"TOKEN_EXPIRED\"}");
+        }catch (UsernameNotFoundException e) {
+            log.error("User not found or deleted: {}", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\":false, \"message\":\"User not found or deleted\"}");
         } catch (Exception e) {
             log.error("JWT Authentication failed: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);

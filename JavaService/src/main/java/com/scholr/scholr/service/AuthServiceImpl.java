@@ -102,9 +102,14 @@ public class AuthServiceImpl implements AuthService{
         User user = userService.findByCollegeId(authRequest.getCollegeId())
                 .orElseThrow(() -> new UserNotFoundException("User not found !"));
 
+        if (user.isDeleted()) {
+            throw new AccountDeletedException("Your account has been deactivated or deleted.");
+        }
+
         if(!user.isVerified()){
             throw new UnauthorizedAccessException("Account not verified. Please verify your OTP first.");
         }
+
 
         boolean passwordValid = passwordService.isPasswordValid(user, authRequest.getPassword());
         if(!passwordValid) throw new InvalidPasswordException("Invalid password or college id");

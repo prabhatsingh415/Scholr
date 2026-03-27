@@ -164,6 +164,18 @@ public class UserServiceImpl implements UserService{
         return repository.findAllByRole(role);
     }
 
+    @Override
+    @Transactional
+    public void delete(User user) {
+        repository.delete(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserById(String collegeId) {
+        repository.deleteByCollegeId(collegeId);
+    }
+
     private DashboardDataResponse mapToDashboardDTO(User user) {
         // Common Fields
         String collegeId = user.getCollegeId();
