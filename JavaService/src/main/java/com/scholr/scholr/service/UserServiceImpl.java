@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -70,7 +71,6 @@ public class UserServiceImpl implements UserService{
         Role role = user.getRole();
 
         Boolean isHod = null;
-        Boolean isClassTeacher = null;
         String rollNo = null;
         String batchId = null;
         String courseName = null;
@@ -78,17 +78,16 @@ public class UserServiceImpl implements UserService{
         // Type checking aur casting
         if (user instanceof Teacher teacher) {
             isHod = teacher.isHod();
-            isClassTeacher = teacher.isClassTeacher();
         } else if (user instanceof Student student) {
             rollNo = student.getRollNo();
-            batchId = student.getBatchId();
+            batchId = String.valueOf(student.getBatch().getBatchId());
             courseName = student.getCourseName();
         }
 
         return new UserDataResponse(
                 collegeId, firstName, lastName, email, role,
-                user.getProfilePicURL(), user.getDeptId(), user.isVerified(),
-                isHod, isClassTeacher, rollNo, batchId, courseName
+                user.getProfilePicURL(), user.getDepartment().getDeptId(), user.isVerified(),
+                isHod, rollNo, batchId, courseName
         );
     }
 
@@ -141,6 +140,11 @@ public class UserServiceImpl implements UserService{
         return this.mapToDashboardDTO(user) ;
     }
 
+    @Override
+    public List<StudentDTO> fetchStudentWithSub(FetchStudentWithSubRequest request) {
+        return repository.fetchStudentsForAttendance(request.subjectCode(), request.semesterId(), request.deptId());
+    }
+
     private DashboardDataResponse mapToDashboardDTO(User user) {
         // Common Fields
         String collegeId = user.getCollegeId();
@@ -149,7 +153,7 @@ public class UserServiceImpl implements UserService{
         String email = user.getEmail();
         String phoneNo = user.getPhoneNo();
         String profilePicURL = user.getProfilePicURL();
-        String deptId = user.getDeptId();
+        String deptId = user.getDepartment().getDeptId();
         String role = user.getRole().name();
 
         // Student Specific Fields
@@ -163,7 +167,7 @@ public class UserServiceImpl implements UserService{
         if (user instanceof Student student) {
             rollNo = student.getRollNo();
             courseName = student.getCourseName();
-            batchId = student.getBatchId();
+            batchId = String.valueOf(student.getBatch().getBatchId());
             cgpa = student.getCgpa();
             activeBacklogs = student.getActiveBacklogs();
         }

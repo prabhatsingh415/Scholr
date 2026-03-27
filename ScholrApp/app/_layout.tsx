@@ -10,12 +10,13 @@ import Loader from "@/components/ui/Loader";
 const queryClient = new QueryClient();
 
 export default function AuthLayout() {
-  const { auth, _hasHydrated } = useAuthStore();
+  const { auth, _hasHydrated, deleteTokens } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
   const [isReady, setIsReady] = useState<boolean>(false);
 
   useEffect(() => {
+    // deleteTokens();
     setIsReady(true);
   }, []);
 
@@ -34,6 +35,8 @@ export default function AuthLayout() {
     // Route Protection
     if (!auth?.access_token && !inAuthGroup) {
       router.replace("/(auth)/login");
+
+      router.replace("/(tabs)/home");
     } else if (auth?.access_token) {
       if (inAuthGroup || isAtRoot) {
         router.replace("/(tabs)/home");

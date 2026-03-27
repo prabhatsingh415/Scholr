@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ScholrApp",
+    "name": "Scholr",
     "slug": "ScholrApp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,11 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-       "backgroundColor":"#0A0A0A",
+      "backgroundColor": "#0A0A0A",
       "supportsTablet": true
     },
     "android": {
-      "backgroundColor":"#0A0A0A",
+      "backgroundColor": "#0A0A0A",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -30,6 +30,18 @@
     "plugins": [
       "expo-router",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan QR codes."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location to verify attendance."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash_icon.jpg",
@@ -41,7 +53,7 @@
           }
         }
       ],
-        [
+      [
         "expo-secure-store",
         {
           "configureAndroidBackup": true,
