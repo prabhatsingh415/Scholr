@@ -59,7 +59,6 @@ public class GlobalExceptionHandler {
             AlreadyVerifiedException.class,
             InvalidOTPException.class,
             PasswordSameAsOldException.class,
-            UserAlreadyExistsException.class,
             InvalidDepartmentIdException.class,
             InvalidSemesterIdException.class,
             InvalidBatchIdException.class,
@@ -101,6 +100,20 @@ public class GlobalExceptionHandler {
                     element.getLineNumber(),
                     ex.getMessage());
         }
+    }
+
+    @ExceptionHandler({UserAlreadyExistsException.class, SemesterAlreadyExistsException.class })
+    public ResponseEntity<ApiResponse<?>> handleConflict(RuntimeException ex) {
+        return new ResponseEntity<>(
+                new ApiResponse<>(
+                        false,
+                        ex.getMessage(),
+                        null,
+                        "CONFLICT_ERROR", // Error Code
+                        LocalDateTime.now().toString()
+                ),
+                HttpStatus.CONFLICT
+        );
     }
 
     private ResponseEntity<ApiResponse<Object>> buildResponse(HttpStatus status, String message, String errorCode) {

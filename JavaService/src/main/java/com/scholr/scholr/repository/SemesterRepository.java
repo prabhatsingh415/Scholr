@@ -5,5 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SemesterRepository extends JpaRepository<Semester, Long> {
     Semester findBySemesterNo(Integer semester);
+
+    boolean existsBySemesterNoAndYear(Integer integer, Integer year);
 }
+
 
