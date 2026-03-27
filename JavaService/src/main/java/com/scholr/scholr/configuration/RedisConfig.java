@@ -10,8 +10,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.*;
 
-import tools.jackson.databind.ObjectMapper;
-
+import com.fasterxml.jackson.databind.ObjectMapper; // ✅ Ye standard hai
+// Agar GenericJackson2JsonRedisSerializer use kar rahe ho toh wo bhi check kar lena
 import java.time.Duration;
 import java.util.Map;
 
@@ -22,8 +22,8 @@ public class RedisConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory, ObjectMapper objectMapper) {
 
-        JacksonJsonRedisSerializer<Object> genericSerializer =
-                new JacksonJsonRedisSerializer<>(objectMapper, Object.class);
+        Jackson2JsonRedisSerializer<Object> genericSerializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
 
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(12))
@@ -31,8 +31,8 @@ public class RedisConfig {
                         RedisSerializationContext.SerializationPair.fromSerializer(genericSerializer)
                 );
 
-        JacksonJsonRedisSerializer<DashboardDataResponse> userSerializer =
-                new JacksonJsonRedisSerializer<>(objectMapper, DashboardDataResponse.class);
+        Jackson2JsonRedisSerializer<DashboardDataResponse> userSerializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, DashboardDataResponse.class);
 
         RedisCacheConfiguration userProfileConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofDays(1))
@@ -55,7 +55,7 @@ public class RedisConfig {
 
         template.setKeySerializer(new StringRedisSerializer());
 
-        JacksonJsonRedisSerializer<Object> serializer = new JacksonJsonRedisSerializer<>(redisObjectMapper, Object.class);
+        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(redisObjectMapper, Object.class);
 
         template.setValueSerializer(serializer);
         template.setHashValueSerializer(serializer);

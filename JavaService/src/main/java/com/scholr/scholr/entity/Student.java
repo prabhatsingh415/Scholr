@@ -26,6 +26,9 @@ public class Student extends User {
     @JoinColumn(name = "semester_id")
     private Semester semester;
 
+    @Column(name = "device_id", unique = true)
+    private String deviceId;       // for device binding
+
     @ManyToOne
     private Batch batch;
 
