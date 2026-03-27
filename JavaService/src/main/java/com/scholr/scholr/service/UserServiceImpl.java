@@ -145,6 +145,37 @@ public class UserServiceImpl implements UserService{
         return repository.fetchStudentsForAttendance(request.subjectCode(), request.semesterId(), request.deptId());
     }
 
+    @Override
+    public List<UserDTO> findByRole(Role role) {
+        return repository.findByRole(role).stream()
+                .map(user -> new UserDTO(
+                        user.getUserId(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getCollegeId(),
+                        user.getRole(),
+                        user.getDepartment() != null ? user.getDepartment().getDeptName() : "N/A"
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<User> findAllByRole(Role role) {
+        return repository.findAllByRole(role);
+    }
+
+    @Override
+    @Transactional
+    public void delete(User user) {
+        repository.delete(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserById(String collegeId) {
+        repository.deleteByCollegeId(collegeId);
+    }
+
     private DashboardDataResponse mapToDashboardDTO(User user) {
         // Common Fields
         String collegeId = user.getCollegeId();

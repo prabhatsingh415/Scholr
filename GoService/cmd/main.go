@@ -22,6 +22,8 @@ func main() {
 	defer stop()
 	go consumer.ConsumeMsg(rootCtx) // consume the broker's messages
 
+	go consumer.ConsumeNotifications(rootCtx) // consumer for notification messages
+
 	router := gin.Default()
 
 	router.GET("/home", func(ctx *gin.Context) {

@@ -5,6 +5,8 @@ import com.scholr.scholr.repository.SemesterRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @AllArgsConstructor
 public class SemesterServiceImpl implements SemesterService{
@@ -14,4 +16,10 @@ public class SemesterServiceImpl implements SemesterService{
     public Semester findBySemesterNo(Integer semester) {
         return repository.findBySemesterNo(semester);
     }
+
+    @Override
+    public Optional<Semester> findById(Long id) {
+        return repository.findById(id);
+    }
 }
+

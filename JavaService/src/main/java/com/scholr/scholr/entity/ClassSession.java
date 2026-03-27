@@ -19,18 +19,18 @@ public class ClassSession {
     private Subject subject;
 
     @ManyToOne
-    @JsonIgnoreProperties({"sessions", "subjects", "password"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
     @ManyToOne
-    @JsonIgnoreProperties({"sessions", "batches", "students"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JoinColumn(name = "semester_no")
     private Semester semester;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dept_id")
-    @JsonIgnoreProperties({"deptId", "deptName"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Department department;
 
     private String topic;

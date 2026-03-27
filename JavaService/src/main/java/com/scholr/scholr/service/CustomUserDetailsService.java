@@ -24,6 +24,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 
+        if (user.isDeleted()) {
+            throw new UsernameNotFoundException("User is deleted");
+        }
+
         return new CustomUserDetails(user);
     }
 }

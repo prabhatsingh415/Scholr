@@ -2,6 +2,7 @@ package com.scholr.scholr.repository;
 
 import com.scholr.scholr.dto.StudentDTO;
 import com.scholr.scholr.entity.User;
+import com.scholr.scholr.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,4 +29,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("semesterId") Long semesterId,
             @Param("deptId") Long deptId
     );
+
+    List<User> findByRole(Role role);
+
+    List<User> findAllByRole(Role role);
+
+    void deleteByCollegeId(String collegeId);
 }

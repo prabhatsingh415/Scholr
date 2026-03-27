@@ -3,14 +3,23 @@ package com.scholr.scholr.entity;
 import com.scholr.scholr.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
+@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE user_id=?")
+@SQLRestriction("is_deleted = false")
 public abstract class User {
 
     @Id
@@ -33,6 +42,8 @@ public abstract class User {
 
     private String profilePicURL;
 
+    private String fcmId; // for push notification
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dept_id")
     private Department department;
@@ -45,6 +56,9 @@ public abstract class User {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
     @PrePersist
     protected void onCreate() {

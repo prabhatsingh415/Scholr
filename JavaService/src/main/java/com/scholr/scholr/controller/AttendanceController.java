@@ -5,7 +5,7 @@ import com.scholr.scholr.dto.QRResponse;
 import com.scholr.scholr.dto.StartAttendanceRequest;
 import com.scholr.scholr.dto.StudentAttendanceRequest;
 import com.scholr.scholr.entity.ClassSession;
-import com.scholr.scholr.enums.ManualAttendanceRequest;
+import com.scholr.scholr.dto.ManualAttendanceRequest;
 import com.scholr.scholr.service.AttendanceService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
