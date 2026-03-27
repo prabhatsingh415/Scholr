@@ -36,7 +36,7 @@ public class SemesterServiceImpl implements SemesterService{
         Semester semester = new Semester();
         semester.setSemesterNo(request.semesterNo());
         semester.setYear(request.year());
-        semester.setActive(true);
+//      semester.setActive(true);
 
         return repository.save(semester);
     }

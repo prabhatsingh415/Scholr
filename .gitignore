@@ -52,3 +52,11 @@ android/app/build/
 
 .expo-shared/
 .metro/
+
+
+# Firebase Client Config (Mobile App)
+google-services.json
+GoogleService-Info.plist
+
+# Firebase Admin SDK (Go Service)
+serviceAccountKey.json

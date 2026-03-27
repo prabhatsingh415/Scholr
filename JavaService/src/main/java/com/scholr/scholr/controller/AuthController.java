@@ -3,6 +3,7 @@ package com.scholr.scholr.controller;
 import com.scholr.scholr.dto.*;
 import com.scholr.scholr.exception.UnauthorizedAccessException;
 import com.scholr.scholr.service.AuthService;
+import com.scholr.scholr.service.DeviceManagementService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final DeviceManagementService deviceMgmtService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> processSignUp(@Valid @RequestBody AuthRequest request){
@@ -61,6 +63,8 @@ public class AuthController {
     public ResponseEntity<?> confirmSignUp(@Valid @RequestBody VerifyOTPRequest request){
         log.info("[Auth:OTP-Verification] Verification attempt for collegeId: {}", request.collegeId());
 
+        deviceMgmtService.checkAndRegister(request.deviceId(), request.fcmId(), request.collegeId());
+
         AuthResponse authResponse = authService.verifyOTP(request.otp(), request.collegeId());
 
         ResponseCookie refreshCookie = authService.createRefreshCookie(authResponse.refreshToken());
@@ -72,7 +76,7 @@ public class AuthController {
                         true,
                         "OTP verified successfully",
                         Map.of("access_token", authResponse.accessToken(),
-                            "user", authResponse.user()),
+                                "user", authResponse.user()),
                         null,
                         LocalDateTime.now().toString()
                 ));
@@ -81,6 +85,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody AuthRequest authRequest){
         log.info("[Auth:Login] Login attempt for collegeId {}", authRequest.getCollegeId());
+
+        deviceMgmtService.checkAndRegister(authRequest.getDeviceId(), authRequest.getFcmId(), authRequest.getCollegeId());
 
         AuthResponse authResponse = authService.handleLogin(authRequest);
 
@@ -122,7 +128,6 @@ public class AuthController {
         log.info("[Auth:refresh] request reached for token rotation");
 
         if (request.getCookies() == null) {
-            log.error("yaha par hooon nahi mila");
             throw new UnauthorizedAccessException("Refresh token missing");
         }
 
@@ -132,7 +137,6 @@ public class AuthController {
                 .findFirst()
                 .orElseThrow(() -> new UnauthorizedAccessException("Refresh token missing"));
 
-         log.info("old token {}", oldRefreshToken);
         TokenData newTokenData = authService.rotateTokens(oldRefreshToken);
 
         ResponseCookie newCookie = authService.createRefreshCookie(newTokenData.refreshToken());

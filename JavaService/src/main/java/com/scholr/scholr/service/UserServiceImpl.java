@@ -142,7 +142,12 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public List<StudentDTO> fetchStudentWithSub(FetchStudentWithSubRequest request) {
-        return repository.fetchStudentsForAttendance(request.subjectCode(), request.semesterId(), request.deptId());
+        return repository.fetchStudentsForAttendance(request.subjectCode(), request.semesterId(), request.deptId(), request.sessionId());
+    }
+
+    @Override
+    public List<String> findAllFcmTokensBySemesterAndDepartment(Long semesterId, String deptId) {
+        return repository.findAllFcmTokensBySemesterAndDepartment(semesterId, deptId);
     }
 
     @Override

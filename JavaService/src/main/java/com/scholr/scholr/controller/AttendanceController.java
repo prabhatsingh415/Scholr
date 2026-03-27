@@ -1,9 +1,6 @@
 package com.scholr.scholr.controller;
 
-import com.scholr.scholr.dto.ApiResponse;
-import com.scholr.scholr.dto.QRResponse;
-import com.scholr.scholr.dto.StartAttendanceRequest;
-import com.scholr.scholr.dto.StudentAttendanceRequest;
+import com.scholr.scholr.dto.*;
 import com.scholr.scholr.entity.ClassSession;
 import com.scholr.scholr.dto.ManualAttendanceRequest;
 import com.scholr.scholr.service.AttendanceService;
@@ -16,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/attendance")
@@ -77,6 +75,22 @@ public class AttendanceController {
                 null,
                 LocalDateTime.now().toString()
 
+        ));
+    }
+
+    @GetMapping("/student/today")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<List<StudentTodayAttendanceResponse>>> getTodayAttendance(
+            @AuthenticationPrincipal UserDetails student) {
+
+        List<StudentTodayAttendanceResponse> history = attendanceService.getStudentTodayHistory(student.getUsername());
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "Today's attendance history fetched",
+                history,
+                null,
+                LocalDateTime.now().toString()
         ));
     }
 }

@@ -6,6 +6,8 @@ import { useResendOtp } from "@/src/hooks/auth/useResendOtp";
 import { useVerifyOtp } from "@/src/hooks/auth/useVerifyOtp";
 import useAuthStore from "@/src/store/authStore";
 import useUserStore from "@/src/store/userStore";
+import { getMessaging, getToken } from "@react-native-firebase/messaging";
+import DeviceInfo from "react-native-device-info";
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -56,41 +58,48 @@ export default function VerifyOTPScreen() {
 
   const isOtpValid = otp.length === otpLength && /^\d+$/.test(otp);
 
-  const handleVerify = () => {
-    mutate(
-      { otp, collegeId },
-      {
-        onSuccess: (response: any) => {
-          const backendResponse = response.data;
-          if (backendResponse && backendResponse.success) {
-            setInfoVisible(true);
-            setInfoMessage("Signup successfull");
-            const access = backendResponse.data.access_token;
-            const rawCookie =
-              response.headers?.["set-cookie"]?.[0] ||
-              response.headers?.["Set-Cookie"]?.[0];
+  const handleVerify = async () => {
+    try {
+      const messaging = getMessaging();
+      const fcmId = await getToken(messaging);
+      const deviceId = await DeviceInfo.getUniqueId();
 
-            const refresh = rawCookie
-              ? extractTokenFromCookie(rawCookie)
-              : null;
+      mutate(
+        { otp, collegeId, fcmId, deviceId },
+        {
+          onSuccess: (response: any) => {
+            const backendResponse = response.data;
+            if (backendResponse && backendResponse.success) {
+              setInfoVisible(true);
+              setInfoMessage("Signup successfull");
+              const access = backendResponse.data.access_token;
+              const rawCookie =
+                response.headers?.["set-cookie"]?.[0] ||
+                response.headers?.["Set-Cookie"]?.[0];
 
-            setTokens({
-              access_token: access,
-              refresh_token: refresh,
-            });
+              const refresh = rawCookie
+                ? extractTokenFromCookie(rawCookie)
+                : null;
 
-            setUser(backendResponse.data.user);
-          }
-        },
-        onError: (error: any) => {
-          const msg =
-            error.response?.data?.message ||
-            "Login Failed: Something went Wrong";
-          setErrorMessage(msg);
-          setErrorVisible(true);
-        },
-      }
-    );
+              setTokens({
+                access_token: access,
+                refresh_token: refresh,
+              });
+
+              setUser(backendResponse.data.user);
+            }
+          },
+          onError: (error: any) => {
+            const msg = error.response?.data?.message || "Verification Failed";
+            setErrorMessage(msg);
+            setErrorVisible(true);
+          },
+        }
+      );
+    } catch (err) {
+      setErrorMessage("Please allow notifications to proceed.");
+      setErrorVisible(true);
+    }
   };
 
   const extractTokenFromCookie = (cookieStr: string) => {

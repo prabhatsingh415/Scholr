@@ -36,6 +36,7 @@ public interface UserService {
 
     void deleteUserById(String s);
 
+    List<String> findAllFcmTokensBySemesterAndDepartment(Long id, String deptId);
 }
 
 

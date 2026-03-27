@@ -31,4 +31,24 @@ export interface FetchStudentAttendance {
   subjectCode: string | null;
   semesterId: number | null;
   deptId: number | null;
+  sessionId: number | null;
+}
+
+export interface StudentAttendance {
+  studentLat: number | null;
+  studentLng: number | null;
+  token: string | null;
+  deviceId: string | null;
+}
+
+export enum AttendanceStatus {
+  PRESENT = "PRESENT",
+  ABSENT = "ABSENT",
+  LATE = "LATE",
+}
+
+export interface ManualAttendanceRequest {
+  collegeId: string;
+  sessionId: number;
+  status: AttendanceStatus;
 }
