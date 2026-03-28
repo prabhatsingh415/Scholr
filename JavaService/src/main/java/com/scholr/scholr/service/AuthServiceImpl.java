@@ -126,8 +126,11 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
-    public ResponseCookie logoutUser(String collegeId) {
+    public ResponseCookie logoutUser(String token, String collegeId) {
         redisTemplate.delete("RT_" + collegeId);
+
+        long remainingTime = jwtService.getRemainingExpiry(token);
+        redisTemplate.opsForValue().set("BL_" + token, "true", Duration.ofMillis(remainingTime));
 
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
                 .maxAge(0)

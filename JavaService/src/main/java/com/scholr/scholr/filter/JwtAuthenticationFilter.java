@@ -9,6 +9,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +27,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${JWT_SECRET}")
     private String secretKey;
@@ -52,6 +54,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Extract JWT Token
         final String token = authHeader.substring(7);
+
+        if (Boolean.TRUE.equals(redisTemplate.hasKey("BL_" + token))) {
+            log.warn("[Security:JWT] Blacklisted token attempted access");
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"success\":false, \"message\":\"TOKEN_REVOKED\", \"error\":\"User has logged out. Please login again.\"}"
+            );
+            return;
+        }
 
         try {
             // Extract username from token

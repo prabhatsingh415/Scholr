@@ -105,12 +105,16 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser(@AuthenticationPrincipal UserDetails userDetails){
+    public ResponseEntity<?> logoutUser(
+            @AuthenticationPrincipal UserDetails userDetails ,
+            @RequestHeader("Authorization") String authHeader ){
+
+        String token = authHeader.substring(7);
         String collegeId = userDetails.getUsername();
 
         log.info("[Auth:Logout] Logout attempt for collegeId {}", collegeId);
 
-        ResponseCookie cookie = authService.logoutUser(collegeId);
+        ResponseCookie cookie = authService.logoutUser(token, collegeId);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())

@@ -16,7 +16,7 @@ public interface AuthService {
 
     AuthResponse handleLogin(@Valid AuthRequest authRequest);
 
-    ResponseCookie logoutUser(String collegeId);
+    ResponseCookie logoutUser(String token, String collegeId);
 
     TokenData rotateTokens(String oldRefreshToken);
 

@@ -102,6 +102,20 @@ public class JwtServiceImpl implements JwtService {
                 .compact();
     }
 
+    public long getRemainingExpiry(String token) {
+        try {
+            Date expiration = extractAllClaims(token, secretKey).getExpiration();
+
+            long now = System.currentTimeMillis();
+
+            long diff = expiration.getTime() - now;
+
+            return Math.max(diff, 0);
+        } catch (Exception e) {
+            log.error("Could not calculate remaining expiry: {}", e.getMessage());
+            return 0;
+        }
+    }
 
     private SecretKey getSecretKey(String secretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
