@@ -11,25 +11,18 @@ import NewsAlert from "@/components/NewsAlert";
 const Index = () => {
     const [showEnquiryModal, setShowEnquiryModal] = useState(false);
     useEffect(() => {
-        localStorage.removeItem("hasVisitedBefore");
         const hasVisited = localStorage.getItem("hasVisitedBefore");
-        console.log("Has visited before:", hasVisited);
-        console.log("Will show modal:", !hasVisited);
         if (!hasVisited) {
             const timer = setTimeout(() => {
-                console.log("Attempting to show enquiry modal");
                 setShowEnquiryModal(true);
             }, 1000);
             return () => clearTimeout(timer);
         }
     }, []);
     const handleCloseModal = () => {
-        console.log("Closing enquiry modal");
         setShowEnquiryModal(false);
         localStorage.setItem("hasVisitedBefore", "true");
-        console.log("Set hasVisitedBefore to true");
     };
-    console.log("Rendering Index with showEnquiryModal:", showEnquiryModal);
     return (<div className="min-h-screen">
       <EnquiryModal isOpen={showEnquiryModal} onClose={handleCloseModal}/>
       

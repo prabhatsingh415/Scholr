@@ -60,7 +60,7 @@ const testimonials = [
         name: "Kartik Nama",
         role: "UX Design Lead at Airbnb",
         course: "Computer Science Engineering",
-        image: "/images/kartik.png",
+        image: "/images/blank.jpg",
         content: "Human empathy and design thinking merged into something beautiful during my time here.",
         rating: 4,
         achievement: "Graduate From GECB"
@@ -201,6 +201,13 @@ const TestimonialsSection = () => {
     const sectionRef = useRef<HTMLElement>(null);
     const titleRef = useRef<HTMLHeadingElement>(null);
     const testimonialRef = useRef<HTMLDivElement>(null);
+    const fallbackImage = "/images/blank.jpg";
+    const normalizeImageSrc = (path: string) => {
+        if (!path)
+            return encodeURI(fallbackImage);
+        const normalized = path.startsWith("/") ? path : `/images/${path}`;
+        return encodeURI(normalized);
+    };
     useEffect(() => {
         gsap.fromTo(titleRef.current, { opacity: 0, y: 100, scale: 0.8 }, {
             opacity: 1,
@@ -241,80 +248,92 @@ const TestimonialsSection = () => {
         setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
     };
     const currentTestimonial = testimonials[currentIndex];
-    return (<section ref={sectionRef} className="py-32 bg-gradient-to-br from-primary via-primary/95 to-primary/90 text-primary-foreground relative overflow-hidden">
+    return (<section ref={sectionRef} id="testimonials" className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/90 py-20 text-primary-foreground sm:py-24 lg:py-32">
       
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 w-40 h-40 border-2 border-current rounded-full animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-60 h-60 border border-current rounded-full animate-pulse"></div>
-        <div className="absolute top-1/2 left-1/4 w-32 h-32 border border-current rounded-full animate-pulse"></div>
+        <div className="absolute left-6 top-16 hidden h-24 w-24 animate-pulse rounded-full border-2 border-current sm:block lg:left-20 lg:top-20 lg:h-40 lg:w-40"></div>
+        <div className="absolute bottom-10 right-6 hidden h-32 w-32 animate-pulse rounded-full border border-current sm:block lg:bottom-20 lg:right-20 lg:h-60 lg:w-60"></div>
+        <div className="absolute left-1/4 top-1/2 hidden h-20 w-20 animate-pulse rounded-full border border-current md:block lg:h-32 lg:w-32"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container relative z-10 mx-auto px-4 sm:px-6">
         
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 mb-8">
-            <Award className="w-5 h-5 text-yellow-300"/>
-            <span className="text-sm font-semibold tracking-wide">GRADUATE SUCCESS STORIES</span>
+        <div className="mb-12 text-center sm:mb-16 lg:mb-20">
+          <div className="mb-6 inline-flex items-center space-x-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm sm:mb-8 sm:px-6 sm:py-3">
+            <Award className="h-4 w-4 text-yellow-300 sm:h-5 sm:w-5"/>
+            <span className="text-xs font-semibold tracking-[0.18em] sm:text-sm sm:tracking-wide">GRADUATE SUCCESS STORIES</span>
           </div>
           
-          <h2 ref={titleRef} className="text-5xl md:text-7xl font-bold mb-8">
+          <h2 ref={titleRef} className="mb-6 text-3xl font-bold sm:mb-8 sm:text-5xl lg:text-7xl">
             <span className="block">Voices of</span>
             <span className="block text-yellow-300">Excellence</span>
           </h2>
-          <p className="text-xl text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed">
+          <p className="mx-auto max-w-3xl text-base leading-relaxed text-primary-foreground/90 sm:text-lg xl:text-xl">
             Hear from visionaries who transformed their ambitions into world-changing achievements through our exceptional programs.
           </p>
         </div>
 
         
         <div className="max-w-6xl mx-auto">
-          <div ref={testimonialRef} className="relative bg-background/15 backdrop-blur-xl rounded-3xl p-12 md:p-16 border border-white/20 shadow-2xl">
+          <div ref={testimonialRef} className="relative rounded-3xl border border-white/20 bg-background/15 p-5 shadow-2xl backdrop-blur-xl sm:p-8 md:p-12 lg:p-16">
             
-            <div className="absolute -top-8 left-12">
-              <div className="w-16 h-16 bg-yellow-300 rounded-full flex items-center justify-center shadow-xl">
-                <Quote className="w-8 h-8 text-primary"/>
+            <div className="absolute -top-6 left-5 sm:-top-8 sm:left-12">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-300 shadow-xl sm:h-16 sm:w-16">
+                <Quote className="h-6 w-6 text-primary sm:h-8 sm:w-8"/>
               </div>
             </div>
 
             
-            <blockquote className="text-2xl md:text-4xl font-light mb-12 leading-relaxed text-center italic">
+            <blockquote className="mb-8 pt-4 text-center text-lg font-light italic leading-relaxed sm:mb-10 sm:text-2xl md:text-3xl lg:mb-12 lg:text-4xl">
               "{currentTestimonial.content}"
             </blockquote>
 
             
-            <div className="flex items-center justify-center space-x-2 mb-8">
+            <div className="mb-8 flex items-center justify-center space-x-2">
               {[...Array(currentTestimonial.rating)].map((_, i) => (<Star key={i} className="w-7 h-7 fill-yellow-300 text-yellow-300"/>))}
             </div>
 
             
-            <div className="flex flex-col md:flex-row items-center justify-center space-y-6 md:space-y-0 md:space-x-8">
-              <img src={currentTestimonial.image} alt={currentTestimonial.name} className="w-[200px] h-[300px]  rounded-full object-cover border-4 border-yellow-300 shadow-xl transition-all duration-500"/>
+            <div className="flex flex-col items-center justify-center gap-5 md:flex-row md:gap-8">
+              <img src={normalizeImageSrc(currentTestimonial.image)} alt={currentTestimonial.name} onError={(event) => {
+            event.currentTarget.src = encodeURI(fallbackImage);
+        }} className="h-32 w-32 rounded-[1.75rem] border-4 border-yellow-300 object-cover shadow-xl transition-all duration-500 sm:h-40 sm:w-40 md:h-[220px] md:w-[180px] md:rounded-[2.25rem] lg:h-[300px] lg:w-[200px] lg:rounded-full"/>
               <div className="text-center md:text-left">
-                <div className="font-bold text-2xl mb-1">{currentTestimonial.name}</div>
-                <div className="text-primary-foreground/90 text-lg mb-2">{currentTestimonial.role}</div>
-                <div className="text-yellow-300 font-medium">{currentTestimonial.course} Graduate</div>
-                <div className="inline-flex items-center space-x-2 mt-3 bg-yellow-300/20 rounded-full px-3 py-1">
-                  <Award className="w-4 h-4 text-yellow-300"/>
+                <div className="mb-1 text-xl font-bold sm:text-2xl">{currentTestimonial.name}</div>
+                <div className="mb-2 text-base text-primary-foreground/90 sm:text-lg">{currentTestimonial.role}</div>
+                <div className="text-yellow-300 font-medium">{currentTestimonial.course}</div>
+                <div className="mt-3 inline-flex items-center space-x-2 rounded-full bg-yellow-300/20 px-3 py-1">
+                  <Award className="h-4 w-4 text-yellow-300"/>
                   <span className="text-sm font-medium">{currentTestimonial.achievement}</span>
                 </div>
               </div>
             </div>
 
             
-            <div className="flex items-center justify-between mt-12 pt-8 border-t border-white/20">
-              <Button variant="outline" size="lg" onClick={prevTestimonial} className="border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground hover:text-primary transition-all duration-300">
+            <div className="mt-8 flex flex-col gap-4 border-t border-white/20 pt-6 sm:mt-10 sm:pt-8 lg:mt-12 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center justify-between gap-3 lg:hidden">
+                <Button variant="outline" size="icon" onClick={prevTestimonial} className="h-11 w-11 border-2 border-white/40 bg-white/10 text-white transition-all duration-300 hover:bg-white/20 hover:text-white">
+                  <ChevronLeft className="h-5 w-5"/>
+                </Button>
+                <span className="text-sm font-medium text-white/80">{currentIndex + 1} / {testimonials.length}</span>
+                <Button variant="outline" size="icon" onClick={nextTestimonial} className="h-11 w-11 border-2 border-white/40 bg-white/10 text-white transition-all duration-300 hover:bg-white/20 hover:text-white">
+                  <ChevronRight className="h-5 w-5"/>
+                </Button>
+              </div>
+
+              <Button variant="outline" size="lg" onClick={prevTestimonial} className="hidden w-full border-2 border-white/40 bg-white/10 text-white transition-all duration-300 hover:bg-white/20 hover:text-white lg:inline-flex lg:w-auto">
                 <ChevronLeft className="w-5 h-5 mr-2"/>
                 Previous Story
               </Button>
 
               
-              <div className="flex space-x-3">
-                {testimonials.map((_, index) => (<button key={index} onClick={() => setCurrentIndex(index)} className={`w-4 h-4 rounded-full transition-all duration-300 ${index === currentIndex
+              <div className="hidden flex-wrap items-center justify-center gap-3 lg:flex">
+                {testimonials.map((_, index) => (<button key={index} type="button" aria-label={`Show testimonial ${index + 1}`} onClick={() => setCurrentIndex(index)} className={`w-4 h-4 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 ${index === currentIndex
                 ? "bg-yellow-300 scale-125"
                 : "bg-primary-foreground/40 hover:bg-primary-foreground/60"}`}/>))}
               </div>
 
-              <Button variant="outline" size="lg" onClick={nextTestimonial} className="border-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground hover:text-primary transition-all duration-300">
+              <Button variant="outline" size="lg" onClick={nextTestimonial} className="hidden w-full border-2 border-white/40 bg-white/10 text-white transition-all duration-300 hover:bg-white/20 hover:text-white lg:inline-flex lg:w-auto">
                 Next Story
                 <ChevronRight className="w-5 h-5 ml-2"/>
               </Button>

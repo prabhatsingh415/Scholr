@@ -117,13 +117,13 @@ const AboutSection = () => {
                 }
             });
         };
-        animateCount(yearsCountRef, 5);
+        animateCount(yearsCountRef, 7);
         animateCount(facultyCountRef, 30);
         return () => {
             ScrollTrigger.getAll().forEach(trigger => trigger.kill());
         };
     }, []);
-    return (<section ref={sectionRef} id="about" className="py-32 bg-gradient-to-br from-background via-background/95 to-accent/10 relative overflow-hidden">
+    return (<section ref={sectionRef} id="about" className="relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-accent/10 py-20 sm:py-24 lg:py-32">
       
       <div className="absolute inset-0 opacity-5" style={{
             backgroundImage: `radial-gradient(circle at 25% 25%, hsl(var(--primary)) 1px, transparent 1px),
@@ -131,44 +131,44 @@ const AboutSection = () => {
             backgroundSize: "60px 60px, 80px 80px"
         }}></div>
 
-      <div className="container mx-auto px-6 relative z-10">
-        <h2 ref={titleRef} className="text-5xl md:text-7xl font-bold text-center mb-20">
+      <div className="container relative z-10 mx-auto px-4 sm:px-6">
+        <h2 ref={titleRef} className="mb-12 text-center text-3xl font-bold sm:mb-16 sm:text-5xl lg:mb-20 lg:text-7xl">
           <span className="text-foreground">Excellence</span>
           <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/60">Redefined</span>
         </h2>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-24 items-center">
+        <div className="grid grid-cols-1 items-center gap-12 lg:gap-16 xl:grid-cols-2 xl:gap-24">
           
           <div ref={contentRef}>
-            <div className="inline-flex items-center space-x-2 bg-primary/10 rounded-full px-6 py-2 mb-8">
-              <Award className="w-5 h-5 text-primary"/>
-              <span className="text-sm font-semibold text-primary tracking-wide">WORLD-CLASS INSTITUTION</span>
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 sm:mb-8 sm:px-6">
+              <Award className="h-4 w-4 text-primary sm:h-5 sm:w-5"/>
+              <span className="text-xs font-semibold tracking-[0.18em] text-primary sm:text-sm sm:tracking-wide">WORLD-CLASS INSTITUTION</span>
             </div>
 
-            <h3 className="text-4xl md:text-6xl font-bold mb-8 leading-tight">
+            <h3 className="mb-6 text-3xl font-bold leading-tight sm:mb-8 sm:text-4xl lg:text-6xl">
               Why We're The 
               <span className="text-primary"> Global Standard</span>
             </h3>
 
-            <p className="text-xl text-muted-foreground mb-12 leading-relaxed">
+            <p className="mb-8 text-base leading-relaxed text-muted-foreground sm:mb-12 sm:text-lg lg:text-xl">
               We don't just educate; we transform minds, forge leaders, and create visionaries who reshape industries and define the future of human potential.
             </p>
 
             
-            <div ref={achievementsRef} className="space-y-6 mb-12">
+            <div ref={achievementsRef} className="mb-10 space-y-4 sm:mb-12 sm:space-y-6">
               {achievements.map((achievement, index) => (<div key={index} className="flex items-center space-x-4 group">
-                  <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                    <CheckCircle className="w-4 h-4 text-white"/>
+                  <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 transition-all duration-300 group-hover:scale-110">
+                    <CheckCircle className="h-4 w-4 text-white"/>
                   </div>
-                  <span className="text-foreground font-medium group-hover:text-primary transition-colors duration-300">{achievement}</span>
+                  <span className="text-sm font-medium text-foreground transition-colors duration-300 group-hover:text-primary sm:text-base">{achievement}</span>
                 </div>))}
             </div>
 
             
-            <div ref={featuresRef} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div ref={featuresRef} className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3 xl:gap-8">
               {features.map((feature, index) => (<div key={index} className="group p-6 rounded-2xl bg-gradient-to-br from-background to-accent/5 border border-border/50 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:scale-105">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300">
-                    <feature.icon className="w-8 h-8 text-primary"/>
+                  <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 transition-all duration-300 group-hover:scale-110 sm:mb-6 sm:h-16 sm:w-16">
+                    <feature.icon className="h-7 w-7 text-primary sm:h-8 sm:w-8"/>
                   </div>
                   <h4 className="font-bold text-lg mb-3 group-hover:text-primary transition-colors duration-300">{feature.title}</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
@@ -179,23 +179,23 @@ const AboutSection = () => {
           
           <div ref={imageRef} className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
-              <img src="/images/IMG_0189 - Edited.jpg" alt="University Excellence" className="w-full h-[700px] object-cover group-hover:scale-110 transition-all duration-700"/>
+              <img src="/images/IMG_0189 - Edited.jpg" alt="University Excellence" className="h-[380px] w-full object-cover transition-all duration-700 group-hover:scale-110 sm:h-[520px] lg:h-[640px] xl:h-[700px]"/>
               <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent"></div>
             </div>
 
-            
-            <div className="absolute -bottom-12 -left-12 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-border/50">
-              <div className="text-center">
-                <div ref={yearsCountRef} className="text-4xl font-bold text-primary mb-2">0+</div>
-                <div className="text-sm text-muted-foreground font-medium">Years of Excellence</div>
+            <div className="mt-4 grid grid-cols-2 gap-3 lg:contents">
+              <div className="rounded-2xl border border-border/50 bg-background/95 p-4 shadow-xl backdrop-blur-xl sm:p-6 lg:absolute lg:-bottom-12 lg:-left-12 lg:p-8">
+                <div className="text-center">
+                  <div ref={yearsCountRef} className="mb-1 text-3xl font-bold text-primary sm:mb-2 sm:text-4xl">0+</div>
+                  <div className="text-xs font-medium text-muted-foreground sm:text-sm">Years of Excellence</div>
+                </div>
               </div>
-            </div>
 
-            
-            <div className="absolute -top-12 -right-12 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-border/50">
-              <div className="text-center">
-                <div ref={facultyCountRef} className="text-4xl font-bold text-primary mb-2">0+</div>
-                <div className="text-sm text-muted-foreground font-medium">Best Faculty</div>
+              <div className="rounded-2xl border border-border/50 bg-background/95 p-4 shadow-xl backdrop-blur-xl sm:p-6 lg:absolute lg:-right-12 lg:-top-12 lg:p-8">
+                <div className="text-center">
+                  <div ref={facultyCountRef} className="mb-1 text-3xl font-bold text-primary sm:mb-2 sm:text-4xl">0+</div>
+                  <div className="text-xs font-medium text-muted-foreground sm:text-sm">Best Faculty</div>
+                </div>
               </div>
             </div>
 

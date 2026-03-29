@@ -7,7 +7,7 @@ type CmsFooterProps = {
 };
 const footerTone: Record<NonNullable<CmsFooterProps["variant"]>, string> = {
     panel: "border-[#D8DEE8] bg-[#EEF3FA]/82 text-slate-600",
-    login: "border-[#BFC7D5]/55 bg-[#E6EBF2]/65 text-slate-700",
+    login: "border-white/15 bg-slate-950/30 text-white",
 };
 const socialLinks = [
     { icon: Facebook, href: "#", label: "Facebook" },
@@ -33,24 +33,24 @@ const CmsFooter = ({ className, variant = "panel" }: CmsFooterProps) => {
         <div className="flex items-center gap-2">
           {socialLinks.map(({ icon: Icon, href, label }) => (<a key={label} href={href} aria-label={label} className={cn("inline-flex h-7 w-7 items-center justify-center rounded-md border transition-colors", variant === "panel"
                 ? "border-[#C7D1E0] bg-white/45 text-slate-600 hover:bg-white/70"
-                : "border-[#B9C2D1] bg-white/35 text-slate-700 hover:bg-white/60")}>
+                : "border-white/15 bg-white/10 text-white/90 hover:bg-white/20 hover:text-white")}>
               <Icon className="h-3.5 w-3.5"/>
             </a>))}
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
           {footerLinks.map((item, index) => (<div key={item.label} className="flex items-center gap-2">
-              {item.to.startsWith("/") ? (<Link to={item.to} className={cn("transition-colors", variant === "panel" ? "text-slate-600 hover:text-slate-800" : "text-slate-700 hover:text-slate-900")}>
+              {item.to.startsWith("/") ? (<Link to={item.to} className={cn("transition-colors", variant === "panel" ? "text-slate-600 hover:text-slate-800" : "text-white/80 hover:text-white")}>
                   {item.label}
-                </Link>) : (<a href={item.to} className={cn("transition-colors", variant === "panel" ? "text-slate-600 hover:text-slate-800" : "text-slate-700 hover:text-slate-900")}>
+                </Link>) : (<a href={item.to} className={cn("transition-colors", variant === "panel" ? "text-slate-600 hover:text-slate-800" : "text-white/80 hover:text-white")}>
                   {item.label}
                 </a>)}
-              {index < footerLinks.length - 1 && <span className="text-slate-400">|</span>}
+              {index < footerLinks.length - 1 && <span className={cn(variant === "panel" ? "text-slate-400" : "text-white/55")}>|</span>}
             </div>))}
         </div>
-        <p className={cn("text-[11px] font-medium", variant === "panel" ? "text-slate-500" : "text-slate-600")}>
-          College Management Portal
-        </p>
+        {variant === "panel" ? (<p className="text-[11px] font-medium text-slate-500">
+            College Management Portal
+          </p>) : null}
       </div>
     </footer>);
 };

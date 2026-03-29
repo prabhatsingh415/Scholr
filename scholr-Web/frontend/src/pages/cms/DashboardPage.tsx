@@ -1,19 +1,15 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Users, GraduationCap, School, BookOpen, TrendingUp, Calendar, ClipboardList, Bell, Download } from "lucide-react";
-import { db, auth, User, Notice } from "@/lib/local-storage";
+import { type Notice } from "@/lib/local-storage";
+import { downloadNoticeAttachment, openNoticeAttachment } from "@/lib/notice-attachments";
+import { useAuthStore } from "@/stores/use-auth-store";
+import { useCmsStore } from "@/stores/use-cms-store";
+import { useShallow } from "zustand/react/shallow";
 export default function DashboardPage() {
-    const [user, setUser] = useState<User | null>(null);
-    const [isMounted, setIsMounted] = useState(false);
-    useEffect(() => {
-        setUser(auth.getUser());
-        setIsMounted(true);
-    }, []);
-    if (!isMounted) {
-        return <div className="flex h-[50vh] items-center justify-center text-gray-500">Loading dashboard...</div>;
-    }
+    const user = useAuthStore((state) => state.user);
     if (user?.role === "admin")
         return <AdminDashboard />;
     if (user?.role === "teacher")
@@ -23,12 +19,14 @@ export default function DashboardPage() {
     return <div>Please log in to view the dashboard.</div>;
 }
 function AdminDashboard() {
-    const students = db.students.getAll();
-    const teachers = db.teachers.getAll();
-    const classes = db.classes.getAll();
-    const subjects = db.subjects.getAll();
-    const grades = db.grades.getAll();
-    const attendance = db.attendance.getAll();
+    const { students, teachers, classes, subjects, grades, attendance } = useCmsStore(useShallow((state) => ({
+        students: state.students,
+        teachers: state.teachers,
+        classes: state.classes,
+        subjects: state.subjects,
+        grades: state.grades,
+        attendance: state.attendance,
+    })));
     const stats = useMemo(() => {
         const totalStudents = students.length;
         const totalTeachers = teachers.length;
@@ -159,10 +157,10 @@ function AdminDashboard() {
     </div>);
 }
 function FacultyDashboard() {
-    const allNotices = db.notices.getAll();
-    const notices = allNotices
+    const allNotices = useCmsStore((state) => state.notices);
+    const notices = useMemo(() => allNotices
         .filter((n) => n.audience === "teacher" || n.audience === "all")
-        .slice(0, 3);
+        .slice(0, 3), [allNotices]);
     return (<div className="space-y-6">
       <NoticeSection notices={notices} fallback={[
             "Internal marks submission deadline: Friday, 5:00 PM",
@@ -195,10 +193,10 @@ function FacultyDashboard() {
     </div>);
 }
 function StudentDashboard() {
-    const allNotices = db.notices.getAll();
-    const notices = allNotices
+    const allNotices = useCmsStore((state) => state.notices);
+    const notices = useMemo(() => allNotices
         .filter((n) => n.audience === "student" || n.audience === "all")
-        .slice(0, 3);
+        .slice(0, 3), [allNotices]);
     return (<div className="space-y-6">
       <NoticeSection notices={notices} fallback={[
             "Mid-sem exam starts from next Monday",
@@ -234,48 +232,13 @@ function NoticeSection({ notices, fallback }: {
     notices: Notice[];
     fallback: string[];
 }) {
-    const dataUrlToBlob = (dataUrl: string): Blob => {
-        const parts = dataUrl.split(",");
-        if (parts.length !== 2)
-            throw new Error("Invalid data URL");
-        const mimeMatch = parts[0].match(/data:(.*?);base64/);
-        const mime = mimeMatch?.[1] || "application/octet-stream";
-        const binary = atob(parts[1]);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++)
-            bytes[i] = binary.charCodeAt(i);
-        return new Blob([bytes], { type: mime });
-    };
     const openAttachment = (notice: Notice) => {
-        if (!notice.file_data_url)
-            return;
-        try {
-            const blob = dataUrlToBlob(notice.file_data_url);
-            const url = URL.createObjectURL(blob);
-            window.open(url, "_blank", "noopener,noreferrer");
-            setTimeout(() => URL.revokeObjectURL(url), 60000);
-        }
-        catch {
-        }
+        openNoticeAttachment(notice);
     };
     const downloadAttachment = (notice: Notice) => {
-        if (!notice.file_data_url)
-            return;
-        try {
-            const blob = dataUrlToBlob(notice.file_data_url);
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = notice.file_name || "notice-file";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-        catch {
-        }
+        downloadNoticeAttachment(notice);
     };
-    return (<Card className="border-l-4 border-l-yellow-500">
+    return (<Card id="notice-section" className="border-l-4 border-l-yellow-500">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Bell className="h-5 w-5 text-yellow-600"/>

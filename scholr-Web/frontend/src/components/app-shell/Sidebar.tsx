@@ -2,10 +2,10 @@ import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Bell, Users, GraduationCap, School, BookOpen, ClipboardCheck, BarChart3, Calendar, CreditCard, Settings, } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { auth } from "@/lib/local-storage";
+import { useAuthStore } from "@/stores/use-auth-store";
 const items = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "teacher", "student"] },
-    { href: "/notices", label: "Notices", icon: Bell, roles: ["admin"] },
+    { href: "/notices", label: "Notices", icon: Bell, roles: ["admin", "student"] },
     { href: "/students", label: "Students", icon: Users, roles: ["admin", "teacher"] },
     { href: "/teachers", label: "Teachers", icon: GraduationCap, roles: ["admin"] },
     { href: "/classes", label: "Classes", icon: School, roles: ["admin"] },
@@ -18,15 +18,13 @@ const items = [
 ];
 const Sidebar = () => {
     const location = useLocation();
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     const visibleItems = items.filter((item) => item.roles.includes(user?.role || "student"));
-    return (<div className="cms-sidebar w-64 border-r border-[#D8D5C6] min-h-screen bg-gradient-to-b from-[#F4F0DE] to-white shadow-sm">
-      <div className="p-6 border-b border-[#DEDACC]">
-        <div className="text-xl font-bold text-[#112F68] flex items-center gap-2">
-          <School className="h-7 w-7 text-[#0A8B69]"/>
-          GECB
+    return (<div className="cms-sidebar w-64 min-h-screen border-r border-[#D6E4FF] bg-gradient-to-b from-white via-[#F7FAFF] to-[#EAF2FF] shadow-sm">
+      <div className="border-b border-[#D6E4FF] bg-gradient-to-r from-white to-[#EEF5FF] p-5">
+        <div className="rounded-2xl border border-[#DCE9FF] bg-white/90 px-3 py-4 shadow-sm">
+          <img src="/images/GECB-removebg-preview.png" alt="GECB logo" className="h-14 w-full object-contain object-left"/>
         </div>
-        <p className="text-sm text-slate-600 mt-1">College Management System</p>
       </div>
 
       <nav className="flex flex-col gap-1 p-3">
@@ -35,8 +33,8 @@ const Sidebar = () => {
             const isActive = location.pathname === item.href;
             return (<Link key={item.href} to={item.href}>
               <Button variant="ghost" className={cn("justify-start w-full gap-3 h-11 px-4 font-medium transition-all duration-200", isActive
-                    ? "bg-gradient-to-r from-[#112F68] to-[#173E82] text-white shadow-sm hover:from-[#0f295a] hover:to-[#12366f] hover:text-white"
-                    : "text-slate-700 hover:bg-[#EDE8D2] hover:text-[#112F68] hover:shadow-sm")}>
+                    ? "bg-gradient-to-r from-[#123B7A] to-[#1C58B0] text-white shadow-sm hover:from-[#102f62] hover:to-[#184b97] hover:text-white"
+                    : "text-slate-700 hover:bg-[#EAF2FF] hover:text-[#123B7A] hover:shadow-sm")}>
                 <Icon className="h-5 w-5"/>
                 {item.label}
               </Button>

@@ -116,7 +116,7 @@ const Contact = () => {
         {
             icon: Phone,
             title: "Phone",
-            details: ["+91 94148101144", "+91  9928709032"],
+            details: ["+91 9460013249"],
             color: "text-blue-500"
         },
         {

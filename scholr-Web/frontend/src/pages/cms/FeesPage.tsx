@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { auth, getStudents, getFees, db } from "@/lib/local-storage";
+import { getStudents, getFees, db } from "@/lib/local-storage";
 import { toast } from "@/hooks/use-toast";
 import { CreditCard, Plus, DollarSign, AlertCircle, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAuthStore } from "@/stores/use-auth-store";
 interface FeeRecord {
     id: string;
     student_id: string;
@@ -34,7 +35,7 @@ const formatDate = (isoLike: unknown) => {
     return Number.isNaN(d.getTime()) ? "-" : d.toLocaleDateString();
 };
 export default function FeesPage() {
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     const canManage = user?.role !== "student";
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);

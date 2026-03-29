@@ -39,6 +39,50 @@ export type Notice = {
 };
 
 const AUTH_USER_KEY = "auth_user";
+export const CMS_DB_UPDATED_EVENT = "cms-db-updated";
+export const CMS_COLLECTION_KEYS = [
+    "students",
+    "teachers",
+    "subjects",
+    "classes",
+    "attendance",
+    "grades",
+    "fees",
+    "notices",
+] as const;
+export type CmsCollectionKey = (typeof CMS_COLLECTION_KEYS)[number];
+export type CmsDbUpdatedDetail = {
+    collection: CmsCollectionKey;
+};
+
+const notifyCmsCollectionUpdated = (collection: CmsCollectionKey) => {
+    if (typeof window === "undefined") {
+        return;
+    }
+    window.dispatchEvent(new CustomEvent<CmsDbUpdatedDetail>(CMS_DB_UPDATED_EVENT, {
+        detail: { collection },
+    }));
+};
+
+const readStorageCollection = <T>(key: string): T[] => {
+    if (typeof window === "undefined") {
+        return [];
+    }
+
+    const stored = localStorage.getItem(key);
+    if (!stored) {
+        return [];
+    }
+
+    try {
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? (parsed as T[]) : [];
+    }
+    catch {
+        localStorage.removeItem(key);
+        return [];
+    }
+};
 
 const asRecord = (value: unknown): Record<string, unknown> | null => {
     return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
@@ -152,11 +196,20 @@ export const auth = {
             return { user, error: null };
         }
         catch (error) {
-            const message = extractStringByKeys((error as { response?: { data?: unknown } }).response?.data, [
+            const response = (error as { response?: { data?: unknown; status?: number } }).response;
+            const status = response?.status;
+            const apiMessage = extractStringByKeys(response?.data, [
                 "message",
                 "error",
                 "detail",
-            ]) ?? "Login failed. Please check your College ID and password.";
+            ]);
+            let message = apiMessage ?? "Login failed. Please check your College ID and password.";
+            if (!response) {
+                message = "Cannot reach API server. Check VITE_SCHOLR_API_TARGET and backend status.";
+            }
+            else if (status === 404) {
+                message = "Login API route not found. Check VITE_SCHOLR_API_URL and backend base path.";
+            }
             scholrTokenStorage.clear();
             localStorage.removeItem(AUTH_USER_KEY);
             return { user: null, error: message };
@@ -228,14 +281,19 @@ export const auth = {
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
         return user;
     },
-    quickLogin: (role: "admin" | "teacher" | "student") => {
+    quickLogin: (role: "admin" | "teacher" | "student", collegeId?: string) => {
         const roleEmail = role === "admin" ? "admin@school.com" : role === "teacher" ? "teacher@school.com" : "student@school.com";
         const name = role === "admin" ? "Administrator" : role === "teacher" ? "Teacher User" : "Student User";
+        const normalizedCollegeId = collegeId?.trim();
+        const id = normalizedCollegeId && normalizedCollegeId.length > 0 ? normalizedCollegeId : `${role}-${Date.now()}`;
+        const email = normalizedCollegeId && normalizedCollegeId.length > 0
+            ? `${normalizedCollegeId.toLowerCase()}@college.local`
+            : roleEmail;
         const user: User = {
-            id: `${role}-${Date.now()}`,
-            email: roleEmail,
+            id,
+            email,
             role,
-            name,
+            name: normalizedCollegeId && normalizedCollegeId.length > 0 ? normalizedCollegeId : name,
             created_at: new Date().toISOString(),
         };
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
@@ -245,10 +303,7 @@ export const auth = {
 export const db = {
     students: {
         getAll: (): Student[] => {
-            if (typeof window === "undefined")
-                return [];
-            const stored = localStorage.getItem("students");
-            return stored ? JSON.parse(stored) : [];
+            return readStorageCollection<Student>("students");
         },
         insert: (student: Omit<Student, "id" | "created_at">): Student => {
             const students = db.students.getAll();
@@ -259,6 +314,7 @@ export const db = {
             };
             students.push(newStudent);
             localStorage.setItem("students", JSON.stringify(students));
+            notifyCmsCollectionUpdated("students");
             return newStudent;
         },
         update: (id: string, updates: Partial<Student>): Student | null => {
@@ -268,21 +324,20 @@ export const db = {
                 return null;
             students[index] = { ...students[index], ...updates };
             localStorage.setItem("students", JSON.stringify(students));
+            notifyCmsCollectionUpdated("students");
             return students[index];
         },
         delete: (id: string): boolean => {
             const students = db.students.getAll();
             const filtered = students.filter((s) => s.id !== id);
             localStorage.setItem("students", JSON.stringify(filtered));
+            notifyCmsCollectionUpdated("students");
             return filtered.length < students.length;
         },
     },
     teachers: {
         getAll: (): Teacher[] => {
-            if (typeof window === "undefined")
-                return [];
-            const stored = localStorage.getItem("teachers");
-            return stored ? JSON.parse(stored) : [];
+            return readStorageCollection<Teacher>("teachers");
         },
         insert: (teacher: Omit<Teacher, "id" | "created_at">): Teacher => {
             const teachers = db.teachers.getAll();
@@ -293,6 +348,7 @@ export const db = {
             };
             teachers.push(newTeacher);
             localStorage.setItem("teachers", JSON.stringify(teachers));
+            notifyCmsCollectionUpdated("teachers");
             return newTeacher;
         },
         update: (id: string, updates: Partial<Teacher>): Teacher | null => {
@@ -302,21 +358,20 @@ export const db = {
                 return null;
             teachers[index] = { ...teachers[index], ...updates };
             localStorage.setItem("teachers", JSON.stringify(teachers));
+            notifyCmsCollectionUpdated("teachers");
             return teachers[index];
         },
         delete: (id: string): boolean => {
             const teachers = db.teachers.getAll();
             const filtered = teachers.filter((t) => t.id !== id);
             localStorage.setItem("teachers", JSON.stringify(filtered));
+            notifyCmsCollectionUpdated("teachers");
             return filtered.length < teachers.length;
         },
     },
     subjects: {
         getAll: () => {
-            if (typeof window === "undefined")
-                return [];
-            const stored = localStorage.getItem("subjects");
-            return stored ? JSON.parse(stored) : [];
+            return readStorageCollection<any>("subjects");
         },
         insert: (subject: Omit<any, "id" | "created_at">) => {
             const subjects = db.subjects.getAll();
@@ -327,6 +382,7 @@ export const db = {
             };
             subjects.push(newSubject);
             localStorage.setItem("subjects", JSON.stringify(subjects));
+            notifyCmsCollectionUpdated("subjects");
             return newSubject;
         },
         update: (id: string, updates: any) => {
@@ -336,21 +392,20 @@ export const db = {
                 return null;
             subjects[index] = { ...subjects[index], ...updates };
             localStorage.setItem("subjects", JSON.stringify(subjects));
+            notifyCmsCollectionUpdated("subjects");
             return subjects[index];
         },
         delete: (id: string) => {
             const subjects = db.subjects.getAll();
             const filtered = subjects.filter((s: any) => s.id !== id);
             localStorage.setItem("subjects", JSON.stringify(filtered));
+            notifyCmsCollectionUpdated("subjects");
             return filtered.length < subjects.length;
         },
     },
     classes: {
         getAll: () => {
-            if (typeof window === "undefined")
-                return [];
-            const stored = localStorage.getItem("classes");
-            return stored ? JSON.parse(stored) : [];
+            return readStorageCollection<any>("classes");
         },
         insert: (classData: Omit<any, "id" | "created_at">) => {
             const classes = db.classes.getAll();
@@ -361,6 +416,7 @@ export const db = {
             };
             classes.push(newClass);
             localStorage.setItem("classes", JSON.stringify(classes));
+            notifyCmsCollectionUpdated("classes");
             return newClass;
         },
         update: (id: string, updates: any) => {
@@ -370,21 +426,20 @@ export const db = {
                 return null;
             classes[index] = { ...classes[index], ...updates };
             localStorage.setItem("classes", JSON.stringify(classes));
+            notifyCmsCollectionUpdated("classes");
             return classes[index];
         },
         delete: (id: string) => {
             const classes = db.classes.getAll();
             const filtered = classes.filter((c: any) => c.id !== id);
             localStorage.setItem("classes", JSON.stringify(filtered));
+            notifyCmsCollectionUpdated("classes");
             return filtered.length < classes.length;
         },
     },
     attendance: {
         getAll: () => {
-            if (typeof window === "undefined")
-                return [];
-            const stored = localStorage.getItem("attendance");
-            return stored ? JSON.parse(stored) : [];
+            return readStorageCollection<any>("attendance");
         },
         insert: (attendance: Omit<any, "id" | "created_at">) => {
             const records = db.attendance.getAll();
@@ -395,6 +450,7 @@ export const db = {
             };
             records.push(newRecord);
             localStorage.setItem("attendance", JSON.stringify(records));
+            notifyCmsCollectionUpdated("attendance");
             return newRecord;
         },
         getByDate: (date: string) => {
@@ -406,10 +462,7 @@ export const db = {
     },
     grades: {
         getAll: () => {
-            if (typeof window === "undefined")
-                return [];
-            const stored = localStorage.getItem("grades");
-            return stored ? JSON.parse(stored) : [];
+            return readStorageCollection<any>("grades");
         },
         insert: (grade: Omit<any, "id" | "created_at">) => {
             const grades = db.grades.getAll();
@@ -420,7 +473,15 @@ export const db = {
             };
             grades.push(newGrade);
             localStorage.setItem("grades", JSON.stringify(grades));
+            notifyCmsCollectionUpdated("grades");
             return newGrade;
+        },
+        delete: (id: string) => {
+            const grades = db.grades.getAll();
+            const filtered = grades.filter((grade: any) => grade.id !== id);
+            localStorage.setItem("grades", JSON.stringify(filtered));
+            notifyCmsCollectionUpdated("grades");
+            return filtered.length < grades.length;
         },
         getByStudent: (studentId: string) => {
             return db.grades.getAll().filter((grade: any) => grade.student_id === studentId);
@@ -431,10 +492,7 @@ export const db = {
     },
     fees: {
         getAll: () => {
-            if (typeof window === "undefined")
-                return [];
-            const stored = localStorage.getItem("fees");
-            return stored ? JSON.parse(stored) : [];
+            return readStorageCollection<any>("fees");
         },
         insert: (fee: Omit<any, "id" | "created_at">) => {
             const fees = db.fees.getAll();
@@ -445,6 +503,7 @@ export const db = {
             };
             fees.push(newFee);
             localStorage.setItem("fees", JSON.stringify(fees));
+            notifyCmsCollectionUpdated("fees");
             return newFee;
         },
         update: (id: string, updates: any) => {
@@ -454,6 +513,7 @@ export const db = {
                 return null;
             fees[index] = { ...fees[index], ...updates };
             localStorage.setItem("fees", JSON.stringify(fees));
+            notifyCmsCollectionUpdated("fees");
             return fees[index];
         },
         getByStudent: (studentId: string) => {
@@ -466,10 +526,7 @@ export const db = {
     },
     notices: {
         getAll: (): Notice[] => {
-            if (typeof window === "undefined")
-                return [];
-            const stored = localStorage.getItem("notices");
-            return stored ? JSON.parse(stored) : [];
+            return readStorageCollection<Notice>("notices");
         },
         insert: (notice: Omit<Notice, "id" | "created_at">): Notice => {
             const notices = db.notices.getAll();
@@ -480,6 +537,7 @@ export const db = {
             };
             notices.unshift(newNotice);
             localStorage.setItem("notices", JSON.stringify(notices));
+            notifyCmsCollectionUpdated("notices");
             return newNotice;
         },
         update: (id: string, updates: Partial<Notice>): Notice | null => {
@@ -489,12 +547,14 @@ export const db = {
                 return null;
             notices[index] = { ...notices[index], ...updates };
             localStorage.setItem("notices", JSON.stringify(notices));
+            notifyCmsCollectionUpdated("notices");
             return notices[index];
         },
         delete: (id: string): boolean => {
             const notices = db.notices.getAll();
             const filtered = notices.filter((n) => n.id !== id);
             localStorage.setItem("notices", JSON.stringify(filtered));
+            notifyCmsCollectionUpdated("notices");
             return filtered.length < notices.length;
         },
     },

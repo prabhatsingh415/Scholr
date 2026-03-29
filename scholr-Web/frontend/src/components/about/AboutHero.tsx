@@ -63,7 +63,7 @@ const AboutHero = () => {
           </span>
         </h1>
         <p ref={subtitleRef} className="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed opacity-90">
-          For over 5+ years, we've been at the forefront of educational excellence, 
+          For over 7+ years, we've been at the forefront of educational excellence, 
           shaping minds and transforming lives through innovative learning and groundbreaking research.
         </p>
       </div>
