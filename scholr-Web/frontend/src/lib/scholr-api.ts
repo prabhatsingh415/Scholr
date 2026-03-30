@@ -6,8 +6,7 @@ const isRecord = (value: unknown): value is AnyRecord => {
   return typeof value === "object" && value !== null;
 };
 
-const API_BASE_URL =
-  import.meta.env.VITE_SCHOLR_API_URL?.replace(/\/+$/, "") || "http://localhost:8080/api/v1";
+const API_BASE_URL = import.meta.env.VITE_SCHOLR_API_URL;
 
 export const SCHOLR_ACCESS_TOKEN_KEY = "scholr_access_token";
 export const SCHOLR_REFRESH_TOKEN_KEY = "scholr_refresh_token";
@@ -150,4 +149,3 @@ export const scholrApiClient = {
     },
   },
 };
-

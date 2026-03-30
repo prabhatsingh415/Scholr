@@ -1,90 +1,23 @@
 import { useEffect, useRef } from "react";
-import { Clock, Users, Award, ArrowRight, GraduationCap, BookOpen, Code, Cpu } from "lucide-react";
+import { Clock, Users, Award, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { courseSections } from "@/data/course-sections";
 gsap.registerPlugin(ScrollTrigger);
-const courseSections = {
-    BCA: {
-        title: "Bachelor of Computer Applications",
-        icon: Code,
-        description: "Comprehensive computer applications and software development programs",
-        color: "from-blue-500 to-cyan-500",
-        branches: [
-            {
-                id: 1,
-                title: "BCA - Bechlor in Computer Applications",
-                description: "Master programming languages, software engineering, and application development.",
-                image: "https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                duration: "3 Years",
-                students: "1.2K",
-                subjects: ["Java", "Python", "Web Development", "Database Management"],
-                featured: true
-            },
-        ]
-    },
-    BTECH: {
-        title: "Bachelor of Technology",
-        icon: Cpu,
-        description: "Advanced engineering and technology programs for future innovators",
-        color: "from-purple-500 to-pink-500",
-        branches: [
-            {
-                id: 5,
-                title: "B.Tech - Computer Science Engineering",
-                description: "Comprehensive computer science with focus on algorithms and system design.",
-                image: "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                duration: "4 Years",
-                students: "2.1K",
-                subjects: ["Data Structures", "Algorithms", "Computer Networks", "AI/ML"],
-                featured: true
-            },
-            {
-                id: 7,
-                title: "B.Tech - Electronics & Communication",
-                description: "Electronic systems, communication networks, and signal processing.",
-                image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                duration: "4 Years",
-                students: "1.5K",
-                subjects: ["Digital Electronics", "Signal Processing", "VLSI Design", "Communication Systems"],
-                featured: false
-            },
-            {
-                id: 8,
-                title: "B.Tech - Agriculture Engineering",
-                description: "Food Engineering, Farm Engineeing, manufacturing processes, and design engineering.",
-                image: "https://images.unsplash.com/photo-1581092786450-6c4b0de0d6d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                duration: "4 Years",
-                students: "1.3K",
-                subjects: ["Thermodynamics", "Manufacturing", "CAD/CAM", "Robotics"],
-                featured: true
-            },
-            {
-                id: 9,
-                title: "B.Tech - Civil Engineering",
-                description: "Infrastructure development, construction management, and structural design.",
-                image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                duration: "4 Years",
-                students: "1.1K",
-                subjects: ["Structural Engineering", "Construction Management", "Environmental Engineering", "Surveying"],
-                featured: false
-            },
-            {
-                id: 10,
-                title: "B.Tech - Electrical Engineering",
-                description: "Power systems, electrical machines, and renewable energy technologies.",
-                image: "https://images.unsplash.com/photo-1559302504-1774c8b6c7e3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                duration: "4 Years",
-                students: "900",
-                subjects: ["Power Systems", "Electrical Machines", "Control Systems", "Renewable Energy"],
-                featured: false
-            }
-        ]
+
+const fallbackCourseImage = encodeURI("/images/1.jpg");
+
+const normalizeCourseImageSrc = (path: string) => {
+    if (!path?.trim()) {
+        return fallbackCourseImage;
     }
+    return encodeURI(path);
 };
+
 const Courses = () => {
     const heroRef = useRef<HTMLElement>(null);
     const sectionsRef = useRef<HTMLDivElement>(null);
@@ -179,7 +112,7 @@ const Courses = () => {
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-            Explore our comprehensive range of <span className="text-primary font-semibold">BCA</span> and <span className="text-purple-600 font-semibold">B.Tech</span> programs designed to shape the future leaders of technology
+            Explore our comprehensive range of <span className="text-purple-600 font-semibold">B.Tech</span> and <span className="text-primary font-semibold">BCA</span> programs designed to shape the future leaders of technology
           </p>
 
           <div className="flex items-center justify-center space-x-8 text-sm text-muted-foreground">
@@ -232,7 +165,15 @@ const Courses = () => {
 
                       
                       <div className="relative h-48 overflow-hidden">
-                        <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"/>
+                        <img
+                          src={normalizeCourseImageSrc(course.image)}
+                          alt={course.title}
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = fallbackCourseImage;
+                          }}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                         
                         
@@ -276,7 +217,7 @@ const Courses = () => {
                       </CardContent>
 
                       <CardFooter>
-                        <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                        <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300" onClick={() => window.location.href = `/courses/${sectionKey.toLowerCase()}`}>
                           Learn More
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"/>
                         </Button>

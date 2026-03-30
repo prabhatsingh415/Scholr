@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { auth, getClasses, getSubjects, getTeachers } from "@/lib/local-storage";
+import { getClasses, getSubjects, getTeachers } from "@/lib/local-storage";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Clock, Edit, Trash2 } from "lucide-react";
+import { useAuthStore } from "@/stores/use-auth-store";
 interface TimetableEntry {
     id: string;
     class_id: string;
@@ -22,8 +23,22 @@ interface TimetableEntry {
 }
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const TIME_SLOTS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
+
+const toMinutes = (time: string) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+};
+
+const slotsBetween = (start: string, end: string) => {
+    const startMin = toMinutes(start);
+    const endMin = toMinutes(end);
+    return TIME_SLOTS.filter((slot) => {
+        const slotMin = toMinutes(slot);
+        return slotMin >= startMin && slotMin < endMin;
+    }).length || 1;
+};
 export default function TimetablePage() {
-    const user = auth.getUser();
+    const user = useAuthStore((state) => state.user);
     const canManage = user?.role !== "student";
     const [selectedClass, setSelectedClass] = useState<string>("");
     const [open, setOpen] = useState(false);
@@ -60,6 +75,14 @@ export default function TimetablePage() {
             toast({
                 title: "Error",
                 description: "Please fill in all required fields.",
+                variant: "destructive",
+            });
+            return;
+        }
+        if (formData.end_time && toMinutes(formData.end_time) <= toMinutes(formData.start_time)) {
+            toast({
+                title: "Error",
+                description: "End time must be after start time.",
                 variant: "destructive",
             });
             return;
@@ -165,23 +188,44 @@ export default function TimetablePage() {
                   {TIME_SLOTS.map((time) => (<tr key={time}>
                       <td className="border border-gray-300 p-3 font-medium bg-gray-50">{time}</td>
                       {DAYS.map((day) => {
-                    const entry = filteredTimetable.find((e: TimetableEntry) => e.day === day && e.start_time === time);
-                    const subject = entry ? subjects.find((s) => s.id === entry.subject_id) : null;
-                    const teacher = entry ? teachers.find((t) => t.id === entry.teacher_id) : null;
-                    return (<td key={day} className="border border-gray-300 p-3 text-center">
-                            {entry ? (<div className="bg-teal-100 p-2 rounded text-sm relative group">
-                                <div className="font-medium text-teal-800">{subject?.name}</div>
-                                <div className="text-teal-600">{teacher?.full_name}</div>
-                                <div className="text-xs text-teal-500">Room: {entry.room}</div>
-                                {canManage && (<div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-teal-200" onClick={() => handleEdit(entry)}>
-                                      <Edit className="h-3 w-3"/>
-                                    </Button>
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-red-200" onClick={() => handleDelete(entry.id)}>
-                                      <Trash2 className="h-3 w-3"/>
-                                    </Button>
-                                  </div>)}
-                              </div>) : (<div className="text-gray-400 text-sm">Free</div>)}
+                    const entry = filteredTimetable.find((e: TimetableEntry) => {
+                        const start = toMinutes(e.start_time);
+                        const end = e.end_time ? toMinutes(e.end_time) : start + 60;
+                        const slotMin = toMinutes(time);
+                        return e.day === day && slotMin >= start && slotMin < end;
+                    });
+                    if (!entry) {
+                        return (<td key={day} className="border border-gray-300 p-3 text-center">
+                            <div className="text-gray-400 text-sm">Free</div>
+                          </td>);
+                    }
+                    const isStart = entry.start_time === time;
+                    if (!isStart) {
+                        return null;
+                    }
+                    const subject = subjects.find((s) => s.id === entry.subject_id);
+                    const teacher = teachers.find((t) => t.id === entry.teacher_id);
+                    const derivedEnd = entry.end_time && toMinutes(entry.end_time) > toMinutes(entry.start_time)
+                        ? entry.end_time
+                        : TIME_SLOTS[TIME_SLOTS.indexOf(time) + 1] ?? entry.start_time;
+                    const span = slotsBetween(entry.start_time, derivedEnd);
+                    return (<td key={day} rowSpan={span} className="border border-gray-300 p-3 text-center align-top">
+                            <div className="bg-teal-100 p-2 rounded text-sm relative group h-full">
+                              <div className="font-medium text-teal-800">{subject?.name}</div>
+                              <div className="text-teal-600">{teacher?.full_name}</div>
+                              <div className="text-xs text-teal-500">Room: {entry.room}</div>
+                              <div className="text-[11px] text-teal-500">
+                                {entry.start_time} - {derivedEnd}
+                              </div>
+                              {canManage && (<div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-teal-200" onClick={() => handleEdit(entry)}>
+                                    <Edit className="h-3 w-3"/>
+                                  </Button>
+                                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-red-200" onClick={() => handleDelete(entry.id)}>
+                                    <Trash2 className="h-3 w-3"/>
+                                  </Button>
+                                </div>)}
+                            </div>
                           </td>);
                 })}
                     </tr>))}

@@ -9,13 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { db, type Class } from "@/lib/local-storage";
 
 const SEMESTER_OPTIONS_BY_YEAR: Record<string, string[]> = {
-  "1st Year": ["1st Semester", "2nd Semester"],
-  "2nd Year": ["3rd Semester", "4th Semester"],
-  "3rd Year": ["5th Semester", "6th Semester"],
-  "4th Year": ["7th Semester", "8th Semester"],
+    "1st Year": ["1st Semester", "2nd Semester"],
+    "2nd Year": ["3rd Semester", "4th Semester"],
+    "3rd Year": ["5th Semester", "6th Semester"],
+    "4th Year": ["7th Semester", "8th Semester"],
 };
 
 const YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+
 interface ClassFormProps {
     initial?: Class;
     onSubmit: (values: Omit<Class, "id" | "created_at" | "updated_at">) => void;
