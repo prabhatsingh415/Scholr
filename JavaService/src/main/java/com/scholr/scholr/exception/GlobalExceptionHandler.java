@@ -41,7 +41,8 @@ public class GlobalExceptionHandler {
             UserNotFoundException.class,
             SubjectNotFoundException.class,
             BatchNotFoundException.class,
-            SessionNotFoundException.class
+            SessionNotFoundException.class,
+            OtpNotFoundException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleNotFound(Exception ex) {
         logErrorLocation(ex);
