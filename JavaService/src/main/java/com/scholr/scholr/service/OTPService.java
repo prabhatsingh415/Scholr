@@ -10,4 +10,10 @@ public interface OTPService {
     String findOtpByCollegeID(String collegeId, String prefix);
 
     void deleteOTP(String collegeId, String prefix);
+
+    void storeOTP(String collegeId, String otp, String prefix);
+
+    int deleteExpiredTokens(LocalDateTime now);
 }
+
+

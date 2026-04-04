@@ -25,3 +25,17 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      redisService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        slidingWindowType: COUNT_BASED
+        recordExceptions:
+          - org.springframework.data.redis.RedisConnectionFailureException
+          - io.lettuce.core.RedisConnectionException

@@ -10,6 +10,9 @@ public interface BlackListTokenService {
     boolean isBlacklisted(String token);
 
     int deleteByExpirationTimeBefore(LocalDateTime expTime);
+
+    void blacklistToken(String token, long remainingTime);
 }
+
 
 

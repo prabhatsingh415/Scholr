@@ -1,7 +1,6 @@
 package com.scholr.scholr.scheduler;
 
 
-import com.scholr.scholr.repository.BlackListTokenRepository;
 import com.scholr.scholr.service.BlackListTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

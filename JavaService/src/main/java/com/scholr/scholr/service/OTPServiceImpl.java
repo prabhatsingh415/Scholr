@@ -3,6 +3,7 @@ package com.scholr.scholr.service;
 import com.scholr.scholr.entity.OTP;
 import com.scholr.scholr.exception.OtpNotFoundException;
 import com.scholr.scholr.repository.OTPRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Random;
 
@@ -33,6 +35,25 @@ public class OTPServiceImpl implements OTPService{
         return otp.toString();
     }
 
+
+    @Override
+    @CircuitBreaker(name = "redisService", fallbackMethod = "storeOTPFallback")
+    public void storeOTP(String collegeId, String otp, String prefix) {
+        redisTemplate.opsForValue().set(prefix + collegeId, otp, Duration.ofMinutes(10));
+    }
+
+    @Override
+    public int deleteExpiredTokens(LocalDateTime now) {
+        return repository.deleteExpiredTokens(now);
+    }
+
+    public void storeOTPFallback(String collegeId, String otp, Throwable t) {
+        log.error("Redis unreachable! Circuit OPEN. Switching to DB for ID: {}. Error: {}",
+                collegeId, t.getMessage());
+
+        saveOTPDB(collegeId, otp, LocalDateTime.now().plusMinutes(10));
+    }
+
     @Override
     public void saveOTPDB(String collegeId, String newOTP, LocalDateTime expTime) {
         OTP otp = OTP.builder()
@@ -45,24 +66,28 @@ public class OTPServiceImpl implements OTPService{
     }
 
     @Override
+    @CircuitBreaker(name = "redisService", fallbackMethod = "findOtpFallback")
     public String findOtpByCollegeID(String collegeId, String prefix) {
-        String otpKey = prefix + collegeId;
-        String otp = null;
-
-        // Try Redis
-        try {
-            otp = redisTemplate.opsForValue().get(otpKey);
-        } catch (Exception e) {
-            log.error("Redis unreachable during OTP fetch. Falling back to DB.");
-        }
+        String otp = redisTemplate.opsForValue().get(prefix + collegeId);
 
         if (otp == null) {
+            log.info("OTP not in Redis, checking DB ID: {}", collegeId);
+
             OTP otpEntity = repository.findByCollegeId(collegeId)
                     .orElseThrow(() -> new OtpNotFoundException("OTP not found or expired!"));
+
             otp = otpEntity.getOtp();
+
         }
 
         return otp;
+    }
+
+    public String findOtpFallback(String collegeId, String prefix, Throwable t) {
+        log.warn("Circuit OPEN! Fetching OTP from DB for ID: {} , Prefix: {}, Error: {}", collegeId, prefix, t.getMessage());
+        OTP otpEntity = repository.findByCollegeId(collegeId)
+                .orElseThrow(() -> new OtpNotFoundException("OTP not found or expired in DB!"));
+        return otpEntity.getOtp();
     }
 
     @Override
@@ -70,12 +95,12 @@ public class OTPServiceImpl implements OTPService{
     public void deleteOTP(String collegeId, String prefix) {
         String otpKey = prefix + collegeId;
 
+        repository.deleteByCollegeId(collegeId);
+
         try {
             redisTemplate.delete(otpKey);
         } catch (Exception e) {
             log.error("Failed to delete from Redis for key: {}", otpKey);
         }
-
-        repository.deleteByCollegeId(collegeId);
     }
 }

@@ -30,10 +30,10 @@ public class AuthController {
     private final DeviceManagementService deviceMgmtService;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> processSignUp(@Valid @RequestBody AuthRequest request){
-       log.info("[Auth:Signup] SignUp attempt for collegeId {}", request.getCollegeId());
+    public ResponseEntity<?> processSignUp(@Valid @RequestBody AuthRequest request) {
+        log.info("[Auth:Signup] SignUp attempt for collegeId {}", request.getCollegeId());
 
-       authService.handleSignUp(request);
+        authService.handleSignUp(request);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 true,
@@ -60,7 +60,7 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> confirmSignUp(@Valid @RequestBody VerifyOTPRequest request){
+    public ResponseEntity<?> confirmSignUp(@Valid @RequestBody VerifyOTPRequest request) {
         log.info("[Auth:OTP-Verification] Verification attempt for collegeId: {}", request.collegeId());
 
         deviceMgmtService.checkAndRegister(request.deviceId(), request.fcmId(), request.collegeId());
@@ -83,7 +83,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@Valid @RequestBody AuthRequest authRequest){
+    public ResponseEntity<?> loginUser(@Valid @RequestBody AuthRequest authRequest) {
         log.info("[Auth:Login] Login attempt for collegeId {}", authRequest.getCollegeId());
 
         deviceMgmtService.checkAndRegister(authRequest.getDeviceId(), authRequest.getFcmId(), authRequest.getCollegeId());
@@ -95,19 +95,19 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new ApiResponse<>(
-             true,
-            "Login successful",
-                     Map.of("access_token", authResponse.accessToken(),
-                            "user", authResponse.user()),
-           null,
-                LocalDateTime.now().toString()
-        ));
+                        true,
+                        "Login successful",
+                        Map.of("access_token", authResponse.accessToken(),
+                                "user", authResponse.user()),
+                        null,
+                        LocalDateTime.now().toString()
+                ));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(
-            @AuthenticationPrincipal UserDetails userDetails ,
-            @RequestHeader("Authorization") String authHeader ){
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestHeader("Authorization") String authHeader) {
 
         String token = authHeader.substring(7);
         String collegeId = userDetails.getUsername();
@@ -121,14 +121,14 @@ public class AuthController {
                 .body(new ApiResponse<>(
                         true,
                         "logout successfully",
-                         null,
+                        null,
                         null,
                         LocalDateTime.now().toString()
                 ));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request){
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         log.info("[Auth:refresh] request reached for token rotation");
 
         if (request.getCookies() == null) {
@@ -157,7 +157,7 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request){
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         log.info("[Auth:forgot_password] request reached for forgot password");
 
         authService.handleForgotPassword(request);
@@ -172,7 +172,7 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password-verify")
-    public ResponseEntity<?> resetPasswordPublic(@Valid @RequestBody ForgotPasswordVerifyRequest request){
+    public ResponseEntity<?> resetPasswordPublic(@Valid @RequestBody ForgotPasswordVerifyRequest request) {
         log.info("[Auth:forgot_password_verification] request reached for forgot password verification");
 
         authService.verifyForgotPasswordOTP(request.otp(), request.collegeId(), request.password());
