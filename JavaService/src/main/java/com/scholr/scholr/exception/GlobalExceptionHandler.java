@@ -78,6 +78,13 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), errorCode);
     }
 
+    // --- 503 Service Unavailable ---
+    @ExceptionHandler(BrokerDownException.class)
+    public ResponseEntity<ApiResponse<Object>> handleServiceUnavailable(BrokerDownException ex) {
+        logErrorLocation(ex);
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), "ERR_503");
+    }
+
     // --- 500 Internal Server Error ---
     @ExceptionHandler({
             Exception.class,
