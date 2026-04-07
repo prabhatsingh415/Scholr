@@ -2,6 +2,7 @@ package com.scholr.scholr.service;
 
 import com.scholr.scholr.dto.*;
 import com.scholr.scholr.entity.BlackListToken;
+import com.scholr.scholr.entity.OTP;
 import com.scholr.scholr.entity.RefreshToken;
 import com.scholr.scholr.entity.User;
 import com.scholr.scholr.exception.*;
@@ -31,20 +32,10 @@ public class AuthServiceImpl implements AuthService{
 
 
     @Override
-    @Transactional
     public void handleSignUp(AuthRequest request) {
         String collegeId = request.getCollegeId();
 
-        User user = userService.findByCollegeId(collegeId)
-                .orElseThrow(() -> new UserNotFoundException("Invalid College ID"));
-
-        if (user.isVerified()) {
-            throw new AlreadyVerifiedException("Account already active. Please login.");
-        }
-
-        String hashedPassword = passwordService.hashPassword(request.getPassword());
-        user.setPassword(hashedPassword);
-        userService.save(user);
+        User user = userService.prepareUserForVerification(collegeId, request.getPassword());
 
         String email = user.getEmail();
         String OTP = otpService.generateOTP(6);
@@ -57,7 +48,6 @@ public class AuthServiceImpl implements AuthService{
                         .build()
         );
     }
-
 
     @Override
     @Transactional

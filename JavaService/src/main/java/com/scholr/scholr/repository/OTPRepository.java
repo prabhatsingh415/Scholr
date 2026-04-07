@@ -20,7 +20,7 @@ public interface OTPRepository extends JpaRepository<OTP, Long> {
     void deleteByCollegeId(String collegeId);
 
     @Modifying
-    @Query("DELETE FROM OTP o WHERE o.expiryDate < :now")
+    @Query("DELETE FROM OTP o WHERE o.expiryTime < :now")
     int deleteExpiredTokens(@Param("now") LocalDateTime now);
 }
 

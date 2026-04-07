@@ -1,6 +1,7 @@
 package com.scholr.scholr.service;
 
 import com.scholr.scholr.entity.OTP;
+import com.scholr.scholr.exception.InvalidOTPException;
 import com.scholr.scholr.exception.OtpNotFoundException;
 import com.scholr.scholr.repository.OTPRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -42,24 +44,29 @@ public class OTPServiceImpl implements OTPService{
         redisTemplate.opsForValue().set(prefix + collegeId, otp, Duration.ofMinutes(10));
     }
 
+    public void storeOTPFallback(String collegeId, String otp, String prefix, Throwable t) {
+        log.error("Redis unreachable! Circuit OPEN. Switching to DB for ID: {}. Prefix: {}, Error: {}",
+                collegeId, prefix, t.getMessage());
+        saveOTPDB(collegeId, otp, LocalDateTime.now().plusMinutes(10));
+    }
+
     @Override
     public int deleteExpiredTokens(LocalDateTime now) {
         return repository.deleteExpiredTokens(now);
     }
 
-    public void storeOTPFallback(String collegeId, String otp, Throwable t) {
-        log.error("Redis unreachable! Circuit OPEN. Switching to DB for ID: {}. Error: {}",
-                collegeId, t.getMessage());
-
-        saveOTPDB(collegeId, otp, LocalDateTime.now().plusMinutes(10));
+    @Override
+    public Optional<OTP> findByCollegeId(String collegeId) {
+        return repository.findByCollegeId(collegeId);
     }
+
 
     @Override
     public void saveOTPDB(String collegeId, String newOTP, LocalDateTime expTime) {
         OTP otp = OTP.builder()
                  .collegeId(collegeId)
                  .otp(newOTP)
-                 .expiryDate(expTime)
+                 .expiryTime(expTime)
                  .build();
 
         repository.save(otp);
@@ -76,6 +83,10 @@ public class OTPServiceImpl implements OTPService{
             OTP otpEntity = repository.findByCollegeId(collegeId)
                     .orElseThrow(() -> new OtpNotFoundException("OTP not found or expired!"));
 
+            if (otpEntity.getExpiryTime().isBefore(LocalDateTime.now())) {
+                repository.delete(otpEntity);
+                throw new InvalidOTPException("Invalid OTP or OTP expired");
+            }
             otp = otpEntity.getOtp();
 
         }

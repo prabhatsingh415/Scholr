@@ -79,8 +79,12 @@ public class GlobalExceptionHandler {
     }
 
     // --- 503 Service Unavailable ---
-    @ExceptionHandler(BrokerDownException.class)
-    public ResponseEntity<ApiResponse<Object>> handleServiceUnavailable(BrokerDownException ex) {
+    @ExceptionHandler({
+            BrokerDownException.class,
+            CloudinaryServiceFailException.class,
+            ImageUploadFailedException.class
+    })
+    public ResponseEntity<ApiResponse<Object>> handleServiceUnavailable(Exception ex) {
         logErrorLocation(ex);
         return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), "ERR_503");
     }
@@ -89,8 +93,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             Exception.class,
             QRCodeToImageConverationFailedException.class,
-            QRGenerationFailedException.class,
-            ImageUploadFailedException.class
+            QRGenerationFailedException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleAllOtherExceptions(Exception ex) {
         logErrorLocation(ex);

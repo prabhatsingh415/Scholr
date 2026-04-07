@@ -24,6 +24,6 @@ public class OTP {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String otp;
 
-    private LocalDateTime expiryDate;
+    private LocalDateTime expiryTime;
 
 }
