@@ -1,5 +1,6 @@
 package com.scholr.scholr.filter;
 
+import com.scholr.scholr.service.BlackListTokenService;
 import com.scholr.scholr.service.CustomUserDetailsService;
 import com.scholr.scholr.service.JwtService;
 import jakarta.servlet.*;
@@ -27,7 +28,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final BlackListTokenService blackListTokenService;
 
     @Value("${JWT_SECRET}")
     private String secretKey;
@@ -55,8 +56,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Extract JWT Token
         final String token = authHeader.substring(7);
 
-        if (Boolean.TRUE.equals(redisTemplate.hasKey("BL_" + token))) {
-            log.warn("[Security:JWT] Blacklisted token attempted access");
+
+        if (blackListTokenService.isBlacklisted(token)) {
+            log.warn("[Security:JWT] Revoked token attempted access");
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");

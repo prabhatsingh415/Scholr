@@ -7,6 +7,7 @@ import com.scholr.scholr.entity.User;
 import com.scholr.scholr.enums.Role;
 import com.scholr.scholr.exception.*;
 import com.scholr.scholr.repository.UserRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -94,6 +95,7 @@ public class UserServiceImpl implements UserService{
     @Override
     @Transactional
     @CacheEvict(value = "userProfile", key = "#collegeId")
+    @CircuitBreaker(name = "cloudinaryService", fallbackMethod = "updateProfilePicFallback")
     public UserDataResponse updateProfilePic(MultipartFile file, String collegeId) {
         String imageUrl = cloudinaryService.uploadImage(file, "profile_pictures")
                  .orElseThrow(() -> new ImageUploadFailedException("Image upload failed"));
@@ -105,6 +107,11 @@ public class UserServiceImpl implements UserService{
         User updatedUser = repository.save(user);
 
         return this.mapToDTO(updatedUser);
+    }
+
+    public UserDataResponse updateProfilePicFallback(MultipartFile file, String collegeId, Throwable t) {
+        log.error("Cloudinary failed for user {}. Reason: {}", collegeId, t.getMessage());
+        throw new CloudinaryServiceFailException("Image upload service is temporarily down. Please try again later.");
     }
 
     @Override
@@ -148,6 +155,22 @@ public class UserServiceImpl implements UserService{
     @Override
     public List<String> findAllFcmTokensBySemesterAndDepartment(Long semesterId, String deptId) {
         return repository.findAllFcmTokensBySemesterAndDepartment(semesterId, deptId);
+    }
+
+    @Transactional
+    @Override
+    public User prepareUserForVerification(String collegeId, String password) {
+         User user =  repository.findByCollegeId(collegeId)
+                    .orElseThrow(() -> new UserNotFoundException("Invalid College ID"));
+
+            if (user.isVerified()) {
+                throw new AlreadyVerifiedException("Account already active. Please login.");
+            }
+
+            String hashedPassword = bCryptPasswordEncoder.encode(password);
+            user.setPassword(hashedPassword);
+
+            return repository.save(user);
     }
 
     @Override
