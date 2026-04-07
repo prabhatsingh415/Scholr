@@ -21,7 +21,6 @@ import java.util.List;
 public class TeacherController {
 
     private final TeacherService teacherService;
-    private final QRService qrService;
 
     @GetMapping("/subjects")
     public ResponseEntity<ApiResponse<List<SubjectData>>> getSubjects(@AuthenticationPrincipal UserDetails userData){

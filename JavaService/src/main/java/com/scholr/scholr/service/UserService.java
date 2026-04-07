@@ -5,6 +5,9 @@ import com.scholr.scholr.dto.*;
 import com.scholr.scholr.entity.User;
 import com.scholr.scholr.enums.Role;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -37,7 +40,13 @@ public interface UserService {
     void deleteUserById(String s);
 
     List<String> findAllFcmTokensBySemesterAndDepartment(Long id, String deptId);
+
+    User prepareUserForVerification(String collegeId, @NotBlank(message = "Password cannot be empty") @Size(min = 8, max = 50, message = "Password must be between 8 and 50 characters") @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$&~`\\!])(?=.*\\d)[A-Za-z\\d@$&~`\\!]{8,50}$",
+            message = "Password must contain at least one uppercase, one lowercase, one number, and one special character (@$&~`!). No dashes allowed."
+    ) String password);
 }
+
 
 
 

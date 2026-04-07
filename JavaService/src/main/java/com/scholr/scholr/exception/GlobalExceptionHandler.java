@@ -41,7 +41,8 @@ public class GlobalExceptionHandler {
             UserNotFoundException.class,
             SubjectNotFoundException.class,
             BatchNotFoundException.class,
-            SessionNotFoundException.class
+            SessionNotFoundException.class,
+            OtpNotFoundException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleNotFound(Exception ex) {
         logErrorLocation(ex);
@@ -77,12 +78,22 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), errorCode);
     }
 
+    // --- 503 Service Unavailable ---
+    @ExceptionHandler({
+            BrokerDownException.class,
+            CloudinaryServiceFailException.class,
+            ImageUploadFailedException.class
+    })
+    public ResponseEntity<ApiResponse<Object>> handleServiceUnavailable(Exception ex) {
+        logErrorLocation(ex);
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), "ERR_503");
+    }
+
     // --- 500 Internal Server Error ---
     @ExceptionHandler({
             Exception.class,
             QRCodeToImageConverationFailedException.class,
-            QRGenerationFailedException.class,
-            ImageUploadFailedException.class
+            QRGenerationFailedException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleAllOtherExceptions(Exception ex) {
         logErrorLocation(ex);

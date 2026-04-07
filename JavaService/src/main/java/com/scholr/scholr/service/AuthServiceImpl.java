@@ -1,6 +1,9 @@
 package com.scholr.scholr.service;
 
 import com.scholr.scholr.dto.*;
+import com.scholr.scholr.entity.BlackListToken;
+import com.scholr.scholr.entity.OTP;
+import com.scholr.scholr.entity.RefreshToken;
 import com.scholr.scholr.entity.User;
 import com.scholr.scholr.exception.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @Service
@@ -23,26 +27,19 @@ public class AuthServiceImpl implements AuthService{
     private final RedisTemplate<String, Object> redisTemplate;
     private final JwtService jwtService;
     private final PasswordService passwordService;
+    private final BlackListTokenService blackListTokenService;
+    private final RefreshTokenService refreshTokenService;
 
 
     @Override
-    @Transactional
     public void handleSignUp(AuthRequest request) {
         String collegeId = request.getCollegeId();
 
-        User user = userService.findByCollegeId(collegeId)
-                .orElseThrow(() -> new UserNotFoundException("Invalid College ID"));
-
-        if (user.isVerified()) {
-            throw new AlreadyVerifiedException("Account already active. Please login.");
-        }
-
-        String hashedPassword = passwordService.hashPassword(request.getPassword());
-        user.setPassword(hashedPassword);
-        userService.save(user);
+        User user = userService.prepareUserForVerification(collegeId, request.getPassword());
 
         String email = user.getEmail();
         String OTP = otpService.generateOTP(6);
+        otpService.storeOTP(collegeId, OTP, "OTP_");
 
         brokerProducer.sendOTPMessage(  // sending email and OTP to msg broker
                 EmailRequest.builder()
@@ -50,16 +47,13 @@ public class AuthServiceImpl implements AuthService{
                         .otp(OTP)
                         .build()
         );
-
-        redisTemplate.opsForValue().set("OTP_"+collegeId, OTP, Duration.ofMinutes(10)); // storing otp in redis
     }
-
 
     @Override
     @Transactional
     public AuthResponse verifyOTP(String otp, String collegeId) {
-        String otpKey = "OTP_" + collegeId; // otp key
-        String cachedOtp = (String) redisTemplate.opsForValue().get(otpKey); // fetch otp from redis
+
+        String cachedOtp = otpService.findOtpByCollegeID(collegeId, "OTP_");
 
         if (cachedOtp == null || !cachedOtp.equals(otp)) {
             throw new InvalidOTPException("Invalid OTP or OTP expired");
@@ -71,7 +65,7 @@ public class AuthServiceImpl implements AuthService{
 
         user.setVerified(true); // set student verify
         userService.save(user);
-        redisTemplate.delete(otpKey); // delete key
+        otpService.deleteOTP(collegeId, "OTP_");
 
         UserDataResponse userData = userService.mapToDTO(user);
 
@@ -79,8 +73,7 @@ public class AuthServiceImpl implements AuthService{
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        String rtKey = "RT_" + collegeId;
-        redisTemplate.opsForValue().set(rtKey, refreshToken, Duration.ofDays(45));
+        refreshTokenService.saveRefreshToken(collegeId, refreshToken);
 
         return new AuthResponse(accessToken, refreshToken, userData);
     }
@@ -119,18 +112,18 @@ public class AuthServiceImpl implements AuthService{
 
         UserDataResponse userDataResponse = userService.mapToDTO(user);
 
-        String rtKey = "RT_" + user.getCollegeId();
-        redisTemplate.opsForValue().set(rtKey, refreshToken, Duration.ofDays(45));
+        refreshTokenService.saveRefreshToken(user.getCollegeId(), refreshToken);
 
         return new AuthResponse(accessToken, refreshToken, userDataResponse);
     }
 
     @Override
     public ResponseCookie logoutUser(String token, String collegeId) {
-        redisTemplate.delete("RT_" + collegeId);
+        refreshTokenService.deleteRefreshToken(collegeId);
 
         long remainingTime = jwtService.getRemainingExpiry(token);
-        redisTemplate.opsForValue().set("BL_" + token, "true", Duration.ofMillis(remainingTime));
+
+        blackListTokenService.blacklistToken(token, remainingTime);
 
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
                 .maxAge(0)
@@ -150,23 +143,29 @@ public class AuthServiceImpl implements AuthService{
     public TokenData rotateTokens(String oldRefreshToken) {
         String collegeId = jwtService.extractUserCollegeId(oldRefreshToken);
 
-        String rtKey = "RT_" + collegeId;
-        String savedToken = (String) redisTemplate.opsForValue().get(rtKey);
+        String savedToken = refreshTokenService.getRefreshToken(collegeId);
 
         if (savedToken == null || !savedToken.equals(oldRefreshToken)) {
-            throw new UnauthorizedAccessException("Invalid or expired refresh token");
+            log.warn("Token mismatch or expired for ID: {}.", collegeId);
+            throw new UnauthorizedAccessException("Session expired or invalid refresh token");
         }
 
         User user = userService.findByCollegeId(collegeId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
 
-        redisTemplate.delete(rtKey);
-
         String newAccess = jwtService.generateAccessToken(user);
         String newRefresh = jwtService.generateRefreshToken(user);
 
-        redisTemplate.opsForValue().set(rtKey, newRefresh, Duration.ofDays(45));
+        refreshTokenService.deleteRefreshToken(collegeId);
+        refreshTokenService.saveRefreshToken(collegeId, newRefresh);
+
+        RefreshToken rfToken = RefreshToken.builder()
+                .collegeId(collegeId)
+                .token(newRefresh)
+                .expiryDate(LocalDateTime.now().plusDays(45))
+                .build();
+        refreshTokenService.saveOrUpdate(rfToken);
 
         return new TokenData(newAccess, newRefresh);
     }
@@ -178,8 +177,10 @@ public class AuthServiceImpl implements AuthService{
 
 
         String email = user.getEmail();
-
+        String collegeId = request.collegeId();
         String OTP = otpService.generateOTP(6);
+
+        otpService.storeOTP(collegeId, OTP, "FP_OTP_");
 
         brokerProducer.sendOTPMessage(  // sending email and OTP to msg broker
                 EmailRequest.builder()
@@ -188,14 +189,13 @@ public class AuthServiceImpl implements AuthService{
                         .build()
         );
 
-        redisTemplate.opsForValue().set("FP_OTP_"+request.collegeId(), OTP, Duration.ofMinutes(10)); // storing otp in redis
+        log.info("[Auth-Service: Forgot Password] OTP sent and stored for: {}", collegeId);
     }
 
     @Override
     @Transactional
     public void verifyForgotPasswordOTP(String otp, String collegeId, String password) {
-        String otpKey = "FP_OTP_" + collegeId; // otp key
-        String cachedOtp = (String) redisTemplate.opsForValue().get(otpKey); // fetch otp from redis
+        String cachedOtp = otpService.findOtpByCollegeID(collegeId, "FP_OTP_");
 
         if (cachedOtp == null || !cachedOtp.equals(otp)) {
             throw new InvalidOTPException("Invalid OTP or OTP expired");
@@ -207,7 +207,8 @@ public class AuthServiceImpl implements AuthService{
         String hashedPassword = passwordService.hashPassword(password);
         user.setPassword(hashedPassword);
         userService.save(user);
-        redisTemplate.delete(otpKey); // delete key
+
+        otpService.deleteOTP(collegeId, "FP_OTP_");
     }
 
     @Override
@@ -228,6 +229,6 @@ public class AuthServiceImpl implements AuthService{
                         .build()
         );
 
-        redisTemplate.opsForValue().set("OTP_" + collegeId, newOTP, Duration.ofMinutes(10));
+        otpService.storeOTP(collegeId, newOTP, "OTP_");
     }
 }
