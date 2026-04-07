@@ -18,80 +18,73 @@ public class DataInitializer {
     @Bean
     CommandLineRunner init(
             UserRepository userRepository,
-            SubjectRepository subjectRepository,
-            BatchRepository batchRepository,
             SemesterRepository semesterRepository,
             DepartmentRepository departmentRepository,
-            BCryptPasswordEncoder bCryptPasswordEncoder,
-            AdminRepository adminRepository
+            BatchRepository batchRepository,
+            BCryptPasswordEncoder bCryptPasswordEncoder
     ) {
         return args -> {
+            // 1. Departments
+            Department csDept = createDept(departmentRepository, "CS-01", "Computer Science");
+            Department meDept = createDept(departmentRepository, "ME-01", "Mechanical Engineering");
 
-            Department csDept = new Department();
-            csDept.setDeptId("CS-01");
-            csDept.setDeptName("Computer Science");
-            departmentRepository.save(csDept);
+            // 2. Semesters (Academic Years)
+            Semester sem2 = createSem(semesterRepository, 2, 1); // 1st Year
+            Semester sem4 = createSem(semesterRepository, 4, 2); // 2nd Year
+            Semester sem6 = createSem(semesterRepository, 6, 3); // 3rd Year
 
-            Semester sem4 = new Semester();
-            sem4.setSemesterNo(4);
-            sem4.setYear(2024);
-            semesterRepository.save(sem4);
+            // 3. Batches
+            Batch batch2027 = createBatch(batchRepository, csDept, sem2);
+            Batch batch2026 = createBatch(batchRepository, csDept, sem4);
+            Batch batch2025 = createBatch(batchRepository, meDept, sem6);
 
-            Teacher teacher = new Teacher();
-            teacher.setCollegeId("T-101");
-            teacher.setEmail("teacher@scholr.com");
-            teacher.setFirstName("Dr. Khushhal");
-            teacher.setRole(Role.TEACHER);
-            teacher.setVerified(true);
-            teacher.setDepartment(csDept);
-            teacher.setPassword(bCryptPasswordEncoder.encode("Password@123"));
-            userRepository.save(teacher);
+            String commonPass = bCryptPasswordEncoder.encode("Password@123");
 
+            // 4. Students - CS Dept - 2nd Year (Batch 2026)
+            saveStudent(userRepository, "ST-01", "Prabhat", "Singh", 9.8, csDept, sem4, batch2026, commonPass);
+            saveStudent(userRepository, "ST-02", "Amit", "Sharma", 8.5, csDept, sem4, batch2026, commonPass);
+            saveStudent(userRepository, "ST-03", "Rahul", "Verma", 9.2, csDept, sem4, batch2026, commonPass);
 
-            Subject javaSub = new Subject();
-            javaSub.setSubjectName("Java Programming");
-            javaSub.setSubjectCode("CS401");
-            javaSub.setTeacher(teacher);
-            javaSub.setSemester(sem4);
-            javaSub.setDepartment(csDept);
-            subjectRepository.save(javaSub);
+            // 5. Students - CS Dept - 1st Year (Batch 2027)
+            saveStudent(userRepository, "ST-04", "Soniya", "Khan", 9.9, csDept, sem2, batch2027, commonPass);
+            saveStudent(userRepository, "ST-05", "Vikas", "Jain", 7.8, csDept, sem2, batch2027, commonPass);
 
+            // 6. Students - Mechanical Dept - 3rd Year (Batch 2025)
+            saveStudent(userRepository, "ST-06", "Aditya", "Gautam", 9.5, meDept, sem6, batch2025, commonPass);
+            saveStudent(userRepository, "ST-07", "Priyansh", "Bhatnagar", 8.9, meDept, sem6, batch2025, commonPass);
 
-            Batch batch2026 = new Batch();
-            batch2026.setSemester(sem4);
-            batch2026.setDepartment(csDept);
-            batch2026.setActive(true);
-            batchRepository.save(batch2026);
-
-
-            Student student = new Student();
-            student.setCollegeId("ST-01");
-            student.setEmail("prabhat@gmail.com");
-            student.setFirstName("Prabhat");
-            student.setLastName("Singh");
-            student.setRole(Role.STUDENT);
-            student.setDepartment(csDept);
-            student.setSemester(sem4);
-            student.setBatch(batch2026);
-            student.setCourseName("B.TECH");
-            student.setRollNo("ROLL-123");
-            student.setDateOfJoining(LocalDate.now());
-            student.setExpectedDateOfGraduation(LocalDate.now().plusYears(4));
-            student.setVerified(true);
-            student.setPassword(bCryptPasswordEncoder.encode("Password@123"));
-            userRepository.save(student);
-
-
-            Admin admin = new Admin();
-            admin.setCollegeId("AD-01");
-            admin.setPassword(bCryptPasswordEncoder.encode("Password@123"));
-            admin.setVerified(true);
-            admin.setRole(Role.ADMIN);
-            admin.setDepartment(csDept);
-
-            adminRepository.save(admin);
-
-            System.out.println("🚀 Scholr Demo Data Loaded Successfully!");
+            System.out.println("🚀 Scholr Ranking Test Data Loaded!");
+            System.out.println("-> Total 7 Students across 2 Depts and 3 Years added.");
         };
+    }
+
+    private Department createDept(DepartmentRepository repo, String id, String name) {
+        Department d = new Department();
+        d.setDeptId(id); d.setDeptName(name);
+        return repo.save(d);
+    }
+
+    private Semester createSem(SemesterRepository repo, int num, int year) {
+        Semester s = new Semester();
+        s.setSemesterNo(num); s.setYear(year);
+        return repo.save(s);
+    }
+
+    private Batch createBatch(BatchRepository repo, Department d, Semester s) {
+        Batch b = new Batch();
+        b.setDepartment(d); b.setSemester(s); b.setActive(true);
+        return repo.save(b);
+    }
+
+    private void saveStudent(UserRepository repo, String id, String fname, String lname, double cgpa,
+                             Department d, Semester s, Batch b, String pass) {
+        Student st = new Student();
+        st.setCollegeId(id); st.setFirstName(fname); st.setLastName(lname);
+        st.setRole(Role.STUDENT); st.setDepartment(d); st.setSemester(s);
+        st.setBatch(b); st.setCgpa(cgpa); st.setPassword(pass);
+        st.setVerified(true); st.setCourseName("B.TECH"); st.setRollNo("R-"+id);
+        st.setDateOfJoining(LocalDate.now());
+        st.setExpectedDateOfGraduation(LocalDate.now().plusYears(4));
+        repo.save(st);
     }
 }
