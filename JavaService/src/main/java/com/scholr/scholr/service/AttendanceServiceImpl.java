@@ -1,13 +1,9 @@
 package com.scholr.scholr.service;
 
-import com.scholr.scholr.dto.QRResponse;
-import com.scholr.scholr.dto.StartAttendanceRequest;
-import com.scholr.scholr.dto.StudentAttendanceRequest;
-import com.scholr.scholr.dto.StudentTodayAttendanceResponse;
+import com.scholr.scholr.dto.*;
 import com.scholr.scholr.entity.*;
 import com.scholr.scholr.enums.AttendanceMode;
 import com.scholr.scholr.enums.AttendanceStatus;
-import com.scholr.scholr.dto.ManualAttendanceRequest;
 import com.scholr.scholr.exception.*;
 import com.scholr.scholr.repository.AttendanceRepository;
 import com.scholr.scholr.utils.LocationUtils;
@@ -88,7 +84,21 @@ public class AttendanceServiceImpl implements AttendanceService{
 
         notificationService.sendQRNotification(session.getSemester(), session.getDepartment(), targetSubject.getSubjectName(), session.getSessionId());
 
-        return new QRResponse(qrToken, session);
+        ClassSessionDTO sessionDTO = new ClassSessionDTO(
+                session.getSessionId(),
+                targetSubject.getSubjectName(),
+                targetSubject.getSubjectCode(),
+                semester.getId(),
+                targetSubject.getDepartment().getId(),
+                semester.getSemesterNo(),
+                targetSubject.getDepartment().getDeptName(),
+                teacher.getFirstName() + " " + teacher.getLastName(),
+                session.getTopic(),
+                session.getConductedAt().toString(),
+                session.isCompleted()
+        );
+
+        return new QRResponse(qrToken, sessionDTO);
     }
 
     @Override

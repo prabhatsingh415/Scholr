@@ -1,8 +1,6 @@
 package com.scholr.scholr.service;
 
 import com.scholr.scholr.dto.*;
-import com.scholr.scholr.entity.BlackListToken;
-import com.scholr.scholr.entity.OTP;
 import com.scholr.scholr.entity.RefreshToken;
 import com.scholr.scholr.entity.User;
 import com.scholr.scholr.exception.*;
@@ -14,7 +12,6 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 @AllArgsConstructor
