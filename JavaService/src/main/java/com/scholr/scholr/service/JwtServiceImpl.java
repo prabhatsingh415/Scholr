@@ -81,13 +81,13 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateTokenWithCustomData(String collegeId, Long sessionId, Integer semsterNo, Subject targetSubject, Double latitude, Double longitude) {
+    public String generateTokenWithCustomData(String collegeId, Long sessionId, Integer semesterNo, Subject targetSubject, Double latitude, Double longitude) {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("college_id", collegeId);
         claims.put("sid", sessionId);
-        claims.put("sno", semsterNo);
-        claims.put("sub", targetSubject.getSubjectName());
+        claims.put("sno", semesterNo);
+        claims.put("subject", targetSubject.getSubjectName());
         claims.put("lat", latitude);
         claims.put("lng", longitude);
 
