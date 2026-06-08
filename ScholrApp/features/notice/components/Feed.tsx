@@ -1,15 +1,14 @@
 import { Text, View, ScrollView, RefreshControl } from "react-native";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Notice } from "@/types/notice";
-import { fetchFeed } from "@/src/service/noticeService";
+import { deleteNotice, fetchFeed } from "@/src/service/noticeService";
 import NoticeLoader from "./NoticeSkeleton";
 import NoticeCard from "./NoticeCard";
-import { useFocusEffect } from "expo-router"; // Keeps state perfectly sync in expo-router contexts
 import { InfoCard } from "@/components/ui/InfoCard";
 import { ErrorCard } from "@/components/ui/ErrorCard";
 
-const Feed = () => {
+const Feed = ({ refreshToggle }: { refreshToggle?: boolean }) => {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -18,9 +17,6 @@ const Feed = () => {
 
   const [successVisible, setSuccessVisible] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
-
-  // Track if it's the very first time the app is opening
-  const [isFirstMount, setIsFirstMount] = useState<boolean>(true);
 
   const loadData = async (showSkeleton = false) => {
     if (showSkeleton) setLoading(true);
@@ -31,7 +27,6 @@ const Feed = () => {
         : [];
       setNotices(activeNotices);
     } catch (error) {
-      console.error("Feed fetch error:", error);
       setErrorMessage("Failed to establish server synchronization pipeline.");
       setErrorVisible(true);
     } finally {
@@ -40,17 +35,9 @@ const Feed = () => {
     }
   };
 
-  // 🔥 PERFECT SINGLE POINT AUTO-RELOAD (Eliminated double useEffect fire)
-  useFocusEffect(
-    useCallback(() => {
-      if (isFirstMount) {
-        loadData(true); // First cold start shows full Shimmer skeleton loader
-        setIsFirstMount(false);
-      } else {
-        loadData(false); // Tab switching pulls fresh stream data silently in the background
-      }
-    }, [isFirstMount])
-  );
+  useEffect(() => {
+    loadData(false);
+  }, [refreshToggle]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -67,19 +54,22 @@ const Feed = () => {
 
   const handleNoticeDelete = async (id: number) => {
     try {
-      // Optimistic layout update - pops the element instantly before heavy network roundtrips
+      await deleteNotice(id);
+
       setNotices((prev) => prev.filter((notice) => notice.id !== id));
-      triggerSuccessToast("Notice successfully unlinked and archived.");
+
+      triggerSuccessToast("Notice successfully Deleted.");
     } catch (error) {
       console.error("Failed to delete notice context packet:", error);
+
       setErrorMessage(
         "Destruction sequence aborted. API state handshake mismatch."
       );
       setErrorVisible(true);
-      loadData(false); // Rollback to sync server data
+
+      loadData(false);
     }
   };
-
   if (loading) {
     return (
       <View className="flex-1 bg-[#0a0a0a] px-4 pt-12">
