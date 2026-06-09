@@ -1,5 +1,6 @@
 package com.scholr.scholr.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.scholr.scholr.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -46,6 +47,7 @@ public abstract class User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dept_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Department department;
 
     @Column(nullable = false)

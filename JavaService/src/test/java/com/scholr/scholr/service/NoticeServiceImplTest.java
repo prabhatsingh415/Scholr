@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
 import java.util.Optional;
@@ -90,7 +91,7 @@ class NoticeServiceImplTest {
     void testCreateNoticeByTeacher_ShouldSetDepartmentFromTeacher() {
         when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
 
-        Notice result = noticeService.createNotice(noticeRequest, teacherUser);
+        Notice result = noticeService.createNotice(noticeRequest, (UserDetails) teacherUser);
 
         assertThat(result).isNotNull();
         assertThat(result.getTitle()).isEqualTo("Test Notice");
@@ -112,7 +113,7 @@ class NoticeServiceImplTest {
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(testDepartment));
         when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
 
-        Notice result = noticeService.createNotice(adminRequest, adminUser);
+        Notice result = noticeService.createNotice(adminRequest, (UserDetails) adminUser);
 
         assertThat(result).isNotNull();
         assertThat(result.getTitle()).isEqualTo("Test Notice");
@@ -132,7 +133,7 @@ class NoticeServiceImplTest {
 
         when(noticeRepository.save(any(Notice.class))).thenReturn(testNotice);
 
-        Notice result = noticeService.createNotice(generalRequest, adminUser);
+        Notice result = noticeService.createNotice(generalRequest, (UserDetails) adminUser);
 
         assertThat(result).isNotNull();
         verify(noticeRepository, times(1)).save(any(Notice.class));
@@ -143,7 +144,7 @@ class NoticeServiceImplTest {
         List<Notice> expectedNotices = List.of(testNotice);
         when(noticeRepository.findAll()).thenReturn(expectedNotices);
 
-        List<Notice> result = noticeService.getNoticesForUser(adminUser);
+        List<Notice> result = noticeService.getNoticesForUser((UserDetails) adminUser);
 
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
@@ -155,7 +156,7 @@ class NoticeServiceImplTest {
         List<Notice> expectedNotices = List.of(testNotice);
         when(noticeRepository.findRelevantNotices(1L)).thenReturn(expectedNotices);
 
-        List<Notice> result = noticeService.getNoticesForUser(studentUser);
+        List<Notice> result = noticeService.getNoticesForUser((UserDetails) studentUser);
 
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
@@ -180,7 +181,7 @@ class NoticeServiceImplTest {
     void testDeleteNoticeByAuthor_ShouldBeSuccessful() {
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(testNotice));
 
-        noticeService.deleteNotice(1L, teacherUser);
+        noticeService.deleteNotice(1L, (UserDetails) teacherUser);
 
         assertThat(testNotice.isActive()).isFalse();
         verify(noticeRepository, times(1)).findById(1L);
@@ -190,7 +191,7 @@ class NoticeServiceImplTest {
     void testDeleteNoticeByAdmin_ShouldBeSuccessful() {
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(testNotice));
 
-        noticeService.deleteNotice(1L, adminUser);
+        noticeService.deleteNotice(1L, (UserDetails) adminUser);
 
         assertThat(testNotice.isActive()).isFalse();
         verify(noticeRepository, times(1)).findById(1L);
@@ -204,7 +205,7 @@ class NoticeServiceImplTest {
 
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(testNotice));
 
-        assertThatThrownBy(() -> noticeService.deleteNotice(1L, unauthorizedUser))
+        assertThatThrownBy(() -> noticeService.deleteNotice(1L, (UserDetails) unauthorizedUser))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Unauthorized to delete this notice");
 
@@ -215,7 +216,7 @@ class NoticeServiceImplTest {
     void testDeleteNonExistentNotice_ShouldThrowException() {
         when(noticeRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> noticeService.deleteNotice(999L, teacherUser))
+        assertThatThrownBy(() -> noticeService.deleteNotice(999L, (UserDetails) teacherUser))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Notice not found");
 

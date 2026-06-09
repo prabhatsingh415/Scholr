@@ -1,5 +1,6 @@
 package com.scholr.scholr.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,5 +18,6 @@ public class Teacher extends User {
     private boolean isHod;
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"teacher", "hibernateLazyInitializer", "handler"})
     private List<Subject> subjects;
 }

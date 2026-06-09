@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -26,15 +27,15 @@ public class NoticeController {
     @PostMapping("/publish")
     public ResponseEntity<ApiResponse<Notice>> publishNotice(
             @Valid @RequestBody NoticeRequest request,
-            @AuthenticationPrincipal User author) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        Notice notice = noticeService.createNotice(request, author);
+        Notice notice = noticeService.createNotice(request, userDetails);
         return ResponseEntity.ok(new ApiResponse<>(true, "Notice Published!", notice, null, LocalDateTime.now().toString()));
     }
 
     @GetMapping("/feed")
-    public ResponseEntity<ApiResponse<List<Notice>>> getNoticeFeed(@AuthenticationPrincipal User user) {
-        List<Notice> notices = noticeService.getNoticesForUser(user);
+    public ResponseEntity<ApiResponse<List<Notice>>> getNoticeFeed(@AuthenticationPrincipal UserDetails userDetails) {
+        List<Notice> notices = noticeService.getNoticesForUser(userDetails);
         return ResponseEntity.ok(new ApiResponse<>(true, "Feed fetched", notices, null, LocalDateTime.now().toString()));
     }
 
@@ -45,8 +46,8 @@ public class NoticeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteNotice(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        noticeService.deleteNotice(id, user);
+    public ResponseEntity<ApiResponse<String>> deleteNotice(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        noticeService.deleteNotice(id, userDetails);
         return ResponseEntity.ok(new ApiResponse<>(true, "Notice deleted successfully", null, null, LocalDateTime.now().toString()));
     }
 }

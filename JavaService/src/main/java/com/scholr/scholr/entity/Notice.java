@@ -1,5 +1,6 @@
 package com.scholr.scholr.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.scholr.scholr.enums.NoticeCategory;
 import com.scholr.scholr.enums.NoticeScope;
 import jakarta.persistence.*;
@@ -28,15 +29,17 @@ public class Notice {
     @Enumerated(EnumType.STRING)
     private NoticeCategory category; // EXAM, EVENT, GENERAL
 
-    @ManyToOne
-    @JoinColumn(name = "dept_id")
-    private Department department; // Null if for all (Admin notice)
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dept_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Department department;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User author;
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private boolean isActive = true;
 }
-

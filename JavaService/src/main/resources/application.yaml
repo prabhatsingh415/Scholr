@@ -25,6 +25,11 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+    visibility:
+      FIELD: ANY
 
 resilience4j:
   circuitbreaker:
